@@ -509,6 +509,7 @@ function saveColumn(col){
   if(!allFilled || !newDate){ toast("Заполните все поля"); return; }
   DB.measurements.push(newMeasurement);
   saveDB();
+  saveMeasurementsToFile();
   renderHistory();
   toast("Колонка сохранена");
 }
@@ -524,8 +525,20 @@ function saveMeasurements(){
   if(!allFilled){ toast("Заполните все поля"); return; }
   DB.measurements.push(newMeasurement);
   saveDB();
+  saveMeasurementsToFile();
   renderHistory();
   toast("Замер добавлен");
+}
+
+function saveMeasurementsToFile(){
+  const data = {measurements: DB.measurements};
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "measurements.json";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 /* Settings */
 $("userName").addEventListener("blur",(e)=>{ DB.user.name=e.target.value.trim()||"Антон"; saveDB(); syncUserUI(); toast("Имя сохранено"); });
