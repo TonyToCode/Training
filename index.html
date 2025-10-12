@@ -48,11 +48,12 @@
   .empty{border:1px dashed var(--line);border-radius:12px;padding:16px;text-align:center;color:var(--muted)}
   .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;opacity:0;transition:opacity .2s;z-index:80}
   .toast.show{opacity:1}
-  .history-table{display:grid;grid-template-columns:200px repeat(3, 150px) 150px;gap:8px;margin-bottom:16px;align-items:center}
+  .history-table{display:grid;grid-template-columns:200px repeat(4, 150px);gap:8px;margin-bottom:16px;align-items:center}
   .history-header{font-weight:600;padding:8px;border-bottom:1px solid var(--line);display:contents}
   .history-header > div{text-align:center}
   .history-row{display:contents}
   .history-row > div{padding:6px;text-align:center;border:1px solid var(--line);background:var(--card)}
+  #addColumn{cursor:pointer;color:var(--accent)}
   .history-form{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:16px}
 </style>
 </head>
