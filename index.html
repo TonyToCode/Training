@@ -510,22 +510,28 @@ function renderHistory(){
   `;
   area.appendChild(form);
   // Слушатели для формы
-  $("addMeasurement").addEventListener("click", ()=> form.style.display="block");
-  $("cancelAdd").addEventListener("click", ()=> form.style.display="none");
-  $("saveAdd").addEventListener("click", ()=>{
-    const newDate=$("newDate").value;
-    const newMeasurement={date:newDate};
-    let allFilled=true;
-    measurements.forEach(m=>{
-      const val=parseFloat($(`new${m.key}`).value);
-      if(isNaN(val)){ allFilled=false; } else { newMeasurement[m.key]=val; }
+  if($("addMeasurement")){
+    $("addMeasurement").addEventListener("click", ()=> form.style.display="block");
+  }
+  if($("cancelAdd")){
+    $("cancelAdd").addEventListener("click", ()=> form.style.display="none");
+  }
+  if($("saveAdd")){
+    $("saveAdd").addEventListener("click", ()=>{
+      const newDate=$("newDate").value;
+      const newMeasurement={date:newDate};
+      let allFilled=true;
+      measurements.forEach(m=>{
+        const val=parseFloat($(`new${m.key}`).value);
+        if(isNaN(val)){ allFilled=false; } else { newMeasurement[m.key]=val; }
+      });
+      if(!allFilled || !newDate){ toast("Заполните все поля"); return; }
+      DB.measurements.push(newMeasurement);
+      saveDB();
+      renderHistory();
+      toast("Замер добавлен");
     });
-    if(!allFilled || !newDate){ toast("Заполните все поля"); return; }
-    DB.measurements.push(newMeasurement);
-    saveDB();
-    renderHistory();
-    toast("Замер добавлен");
-  });
+  }
 }
 /* Settings */
 $("userName").addEventListener("blur",(e)=>{ DB.user.name=e.target.value.trim()||"Антон"; saveDB(); syncUserUI(); toast("Имя сохранено"); });
