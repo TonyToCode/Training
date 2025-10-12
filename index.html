@@ -462,9 +462,9 @@ function renderHistory(){
   const header=document.createElement("div"); header.className="history-header";
   header.innerHTML=`
     <div>Замер</div>
-    <div id="col2Header">Колонка 2</div>
-    <div id="col3Header">Колонка 3</div>
-    <div id="col4Header">Колонка 4</div>
+    <div id="col2Header"><input id="date2" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+    <div id="col3Header"><input id="date3" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+    <div id="col4Header"><input id="date4" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
     <div id="addColumn">Добавить</div>
   `;
   table.appendChild(header);
@@ -499,14 +499,14 @@ function renderHistory(){
 }
 
 function saveColumn(col){
-  const newDate=todayISO();
+  const newDate=$(`date${col}`).value;
   const newMeasurement={date:newDate};
   let allFilled=true;
   measurements.forEach(m=>{
     const val=parseFloat($(`input${m.key}_${col}`).value);
     if(isNaN(val)){ allFilled=false; } else { newMeasurement[m.key]=val; }
   });
-  if(!allFilled){ toast("Заполните все поля"); return; }
+  if(!allFilled || !newDate){ toast("Заполните все поля"); return; }
   DB.measurements.push(newMeasurement);
   saveDB();
   renderHistory();
