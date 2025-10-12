@@ -496,7 +496,10 @@ function renderHistory(){
   saveButton.className = "btn";
   saveButton.textContent = "Сохранить";
   saveButton.style.marginTop = "16px";
-  saveButton.addEventListener("click", saveMeasurementsToFile);
+  saveButton.addEventListener("click", ()=>{
+    saveDB();
+    toast("Данные сохранены локально");
+  });
   area.appendChild(saveButton);
   // Слушатели для заголовков колонок
   $("col2Header").addEventListener("click", ()=> saveColumn(2));
