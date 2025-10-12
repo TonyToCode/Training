@@ -465,7 +465,7 @@ function renderHistory(){
     <div id="col2Header"><input id="date2" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
     <div id="col3Header"><input id="date3" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
     <div id="col4Header"><input id="date4" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-    <div id="addColumn">Добавить</div>
+    <div id="addColumn"><input id="date5" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
   `;
   table.appendChild(header);
   const measurements = [
@@ -515,7 +515,7 @@ function saveColumn(col){
 }
 
 function saveMeasurements(){
-  const newDate=todayISO();
+  const newDate=$("date5").value;
   const newMeasurement={date:newDate};
   let allFilled=true;
   measurements.forEach(m=>{
