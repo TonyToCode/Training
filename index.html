@@ -63,7 +63,7 @@
     <div class="menu">
       <button class="btn" data-open="plan">План</button>
       <button class="btn" data-open="exercises">Упражнения</button>
-      <button class="btn" data-open="history">История</button>
+      <button class="btn" data-open="measurements">История</button>
       <button class="btn" data-open="settings">Настройки</button>
       <span class="pill">Пользователь: <b id="userLabel">—</b></span>
       <span class="pill">Тема: <b id="themeLabel">Тёмная</b></span>
@@ -193,14 +193,14 @@
   </div>
 </div>
 
-<!-- HISTORY -->
-<div class="overlay" id="ov-history" data-overlay>
+<!-- MEASUREMENTS -->
+<div class="overlay" id="ov-measurements" data-overlay>
   <div class="popup card">
     <div class="popheader">
       <h3 style="margin:0 8px">История</h3>
       <button class="x" data-close>✕</button>
     </div>
-    <div id="histArea"></div>
+    <div id="measurementsArea"></div>
   </div>
 </div>
 
@@ -454,9 +454,8 @@ function renderExercises(){ const g=$("exGroup").value; const q=$("exSearch").va
 $("exGroup").addEventListener("change", renderExercises);
 $("exSearch").addEventListener("input", renderExercises);
 
-/* History */
 function renderHistory(){
-  const area=$("histArea"); area.innerHTML="";
+  const area=$("measurementsArea"); area.innerHTML="";
   if(!DB.measurements.length){
     area.innerHTML='<div class="empty">Пока нет замеров.</div>';
     return;
@@ -542,6 +541,7 @@ document.querySelectorAll('[data-open]').forEach(btn=>{
     document.getElementById(id).classList.add("open");
     if(id==="ov-exercises") renderExercises();
     if(id==="ov-plan"){ setPrevWorkoutLabel(); setInitPlanHeader(); }
+    if(id==="ov-measurements") renderHistory();
     if(id==="ov-history") renderHistory();
   });
 });

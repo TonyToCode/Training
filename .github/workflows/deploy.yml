@@ -4,6 +4,8 @@ on:
   push:
     branches: [ main ]
   workflow_dispatch:
+  schedule:
+    - cron: '*/5 * * * *'  # Каждые 5 минут
 
 permissions:
   contents: read
