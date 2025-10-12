@@ -472,53 +472,38 @@ function renderHistory(){
     {key:"forearm_r", label:"Предплечье правое"},
     {key:"forearm_l", label:"Предплечье левое"}
   ];
-  // Ряды с названиями замеров
+  // Ряды с названиями замеров и input полями в колонке 5
   measurements.forEach(measure=>{
     const row=document.createElement("div"); row.className="history-row";
-    row.innerHTML='<div>' + measure.label + '</div><div></div><div></div><div></div><div></div>';
+    row.innerHTML=`
+      <div>${measure.label}</div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div><input id="input${measure.key}" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+    `;
     table.appendChild(row);
   });
   area.appendChild(table);
   // Слушатель для колонки "Добавить"
   $("addColumn").addEventListener("click", ()=>{
-    openAddMeasurementForm();
+    saveMeasurements();
   });
 }
 
-function openAddMeasurementForm(){
-  // Создаем форму для добавления замеров
-  const form=document.createElement("div"); form.className="history-form"; form.id="measurementForm";
-  form.innerHTML=`
-    <h4>Добавить замер</h4>
-    <div class="row" style="margin-bottom:8px">
-      <label class="pill">Дата<input id="newDate" type="date" value="${todayISO()}"></label>
-    </div>
-    <div class="list">
-      ${measurements.map(m=> `<div class="item"><div>${m.label}</div><input id="new${m.key}" type="number" step="0.1" placeholder="см"></div>`).join('')}
-    </div>
-    <div class="row" style="justify-content:flex-end">
-      <button class="btn" id="cancelAdd">Отмена</button>
-      <button class="btn" id="saveAdd">Сохранить</button>
-    </div>
-  `;
-  $("measurementsArea").appendChild(form);
-  // Слушатели
-  $("cancelAdd").addEventListener("click", ()=> form.remove());
-  $("saveAdd").addEventListener("click", ()=>{
-    const newDate=$("newDate").value;
-    const newMeasurement={date:newDate};
-    let allFilled=true;
-    measurements.forEach(m=>{
-      const val=parseFloat($(`new${m.key}`).value);
-      if(isNaN(val)){ allFilled=false; } else { newMeasurement[m.key]=val; }
-    });
-    if(!allFilled || !newDate){ toast("Заполните все поля"); return; }
-    DB.measurements.push(newMeasurement);
-    saveDB();
-    form.remove();
-    renderHistory();
-    toast("Замер добавлен");
+function saveMeasurements(){
+  const newDate=todayISO();
+  const newMeasurement={date:newDate};
+  let allFilled=true;
+  measurements.forEach(m=>{
+    const val=parseFloat($(`input${m.key}`).value);
+    if(isNaN(val)){ allFilled=false; } else { newMeasurement[m.key]=val; }
   });
+  if(!allFilled){ toast("Заполните все поля"); return; }
+  DB.measurements.push(newMeasurement);
+  saveDB();
+  renderHistory();
+  toast("Замер добавлен");
 }
 /* Settings */
 $("userName").addEventListener("blur",(e)=>{ DB.user.name=e.target.value.trim()||"Антон"; saveDB(); syncUserUI(); toast("Имя сохранено"); });
