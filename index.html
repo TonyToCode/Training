@@ -586,14 +586,9 @@ function saveMeasurements(){
 }
 
 function saveMeasurementsToFile(){
-  const data = {measurements: DB.measurements};
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "measurements.json";
-  a.click();
-  URL.revokeObjectURL(url);
+  // Вместо скачивания файла, сохраняем данные в localStorage и показываем сообщение
+  saveDB();
+  toast("Данные сохранены на устройстве");
 }
 /* Settings */
 $("userName").addEventListener("blur",(e)=>{ DB.user.name=e.target.value.trim()||"Антон"; saveDB(); syncUserUI(); toast("Имя сохранено"); });
