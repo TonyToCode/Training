@@ -457,7 +457,7 @@ $("exSearch").addEventListener("input", renderExercises);
 
 function renderHistory(){
   const area=$("measurementsArea"); area.innerHTML="";
-  // Создаем таблицу с 5 колонками
+  // Создаем таблицу с динамическими колонками
   const table=document.createElement("div"); table.className="history-table";
   const header=document.createElement("div"); header.className="history-header";
   header.innerHTML=`
@@ -506,12 +506,11 @@ function renderHistory(){
 }
 
 function addNewColumn(){
-  // Добавляем новую колонку с датой и input полями
   const newDate = todayISO();
-  const newColIndex = 5; // Следующая колонка
+  const newColIndex = document.querySelectorAll('.history-header > div').length; // Количество колонок
   // Обновляем заголовок
   const addColumn = $("addNewColumn");
-  addColumn.innerHTML = `<input id="date${newColIndex}" type="date" value="${newDate}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);>`;
+  addColumn.innerHTML = `<input id="date${newColIndex}" type="date" value="${newDate}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);">`;
   addColumn.id = `col${newColIndex}Header`;
   // Обновляем ряды
   const rows = document.querySelectorAll(".history-row");
