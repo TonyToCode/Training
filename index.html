@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Трекер тренировок — фронтенд v2</title>
+<style>
+  :root{
+    --bg:#0f1115;--card:#171a21;--ink:#e7eefc;--muted:#9aa3b2;--line:#232836;
+    --acc:#22c55e;--warn:#f59e0b;--danger:#ef4444;--chip:#0d1320;--chipline:#283149;
+  }
+  [data-theme="light"]{
+    --bg:#f7f8fb;--card:#ffffff;--ink:#0f1115;--muted:#5f6b7a;--line:#e3e7ef;
+    --acc:#16a34a;--warn:#d97706;--danger:#dc2626;--chip:#eef2ff;--chipline:#c7d2fe;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
+  body{background:var(--bg);color:var(--ink)}
+  header{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);z-index:40}
+  .wrap{max-width:1120px;margin:0 auto;padding:14px}
+  h1{margin:0 0 6px;font-size:20px}
+  .menu{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{background:transparent;border:1px solid var(--line);color:var(--ink);padding:9px 12px;border-radius:10px;cursor:pointer}
+  .btn:hover{border-color:#94a3b8}
+  .btn[disabled]{opacity:.5;cursor:not-allowed}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink);font-size:13px}
+  .muted{color:var(--muted)}
+  .tag{font-size:12px;color:var(--ink);background:var(--chip);border:1px solid var(--chipline);padding:2px 6px;border-radius:6px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+  .list{display:flex;flex-direction:column;gap:8px}
+  .item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--card);background:color-mix(in srgb, var(--card) 90%, #000 10%)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .grow{flex:1}
+  input{background:transparent;border:1px solid var(--line);border-radius:10px;padding:9px 10px;color:var(--ink)}
+  input[type="date"]{padding:7px 10px}
+  select{font-size:14px;border:1px solid var(--line);border-radius:8px;padding:8px 12px;background:var(--card);color:var(--ink);cursor:pointer;min-width:120px;transition:border-color 0.2s}
+  select:hover{border-color:var(--acc);background:color-mix(in srgb, var(--card) 95%, var(--acc) 5%)}
+  select:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 2px color-mix(in srgb, var(--acc) 20%, transparent)}
+  .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.35);z-index:50}
+  .overlay.open{display:flex}
+  .popup{width:min(1020px,100% - 20px);max-height:86vh;overflow:auto}
+  .popheader{position:sticky;top:0;background:var(--card);padding-bottom:8px;margin:-12px -12px 12px -12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;border-radius:14px 14px 0 0}
+  .x{border:1px solid var(--line);background:transparent;border-radius:10px;padding:6px 10px;cursor:pointer}
+  .drawer{position:fixed;inset:0;display:none;justify-content:flex-end;align-items:stretch;background:rgba(0,0,0,.35);z-index:60}
+  .drawer.open{display:flex}
+  .panel{width:min(520px,100%);background:var(--card);border-left:1px solid var(--line);padding:12px;overflow:auto}
+  .sticky{position:sticky;bottom:0;background:color-mix(in srgb, var(--card) 80%, transparent);backdrop-filter:blur(4px);margin:-12px;border-radius:0 0 14px 14px;padding:10px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end}
+  .empty{border:1px dashed var(--line);border-radius:12px;padding:16px;text-align:center;color:var(--muted)}
+  .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;opacity:0;transition:opacity .2s;z-index:80}
+  .toast.show{opacity:1}
+  .history-table{display:grid;grid-template-columns:200px repeat(3, 150px) 150px;gap:8px;margin-bottom:16px;align-items:center}
+  .history-header{font-weight:600;padding:8px;border-bottom:1px solid var(--line);display:contents}
+  .history-header > div{text-align:center}
+  .history-row{display:contents}
+  .history-row > div{padding:6px;text-align:center;border:1px solid var(--line);background:var(--card)}
+  .history-form{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:16px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Трекер тренировок — фронтенд v2</h1>
+    <div class="menu">
+      <button class="btn" data-open="plan">План</button>
+      <button class="btn" data-open="exercises">Упражнения</button>
+      <button class="btn" data-open="history">История</button>
+      <button class="btn" data-open="settings">Настройки</button>
+      <span class="pill">Пользователь: <b id="userLabel">—</b></span>
+      <span class="pill">Тема: <b id="themeLabel">Тёмная</b></span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="card">
+    <h3 style="margin:0 0 8px">Добро пожаловать</h3>
+    <p class="muted">Кликабельный фронтенд без бэка/импорта. Открывайте поп‑апы вверху.</p>
+  </section>
+</main>
+
+<!-- PLAN -->
+<div class="overlay" id="ov-plan" data-overlay>
+  <div class="popup card">
+    <div class="popheader">
+      <h3 style="margin:0 8px">План</h3>
+      <button class="x" data-close>✕</button>
+    </div>
+    <div class="row" style="margin-bottom:8px">
+      <span class="pill">Предыдущее занятие: <b id="prevWorkout">—</b></span>
+    </div>
+    <div class="card" style="margin-bottom:10px">
+      <div class="row">
+        <label class="pill">Дата следующего занятия
+          <input id="planDate" type="date">
+        </label>
+        <label class="pill">Предложенный день цикла
+          <select id="daySel">
+            <option value="1">1 — Ноги/Плечи</option>
+            <option value="2">2 — Грудь/Бицепс</option>
+            <option value="3">3 — Спина/Трицепс</option>
+          </select>
+        </label>
+        <button class="btn" id="btnGen">Сгенерировать</button>
+      </div>
+    </div>
+
+    <div id="planArea" class="list">
+      <div class="empty">Сгенерируйте план, чтобы увидеть упражнения.</div>
+    </div>
+
+    <div class="row" style="margin:12px 0 0">
+      <button class="btn" id="btnEditMain">Редактировать основную</button>
+      <button class="btn" id="btnEditAux">Редактировать дополнительную</button>
+      <button class="btn" id="btnEditCool">Редактировать заминку</button>
+      <button class="btn" id="btnAddWeight">Добавить вес</button>
+      <div class="grow"></div>
+      <button class="btn" id="btnSave" disabled>Отметить тренировку</button>
+    </div>
+  </div>
+</div>
+
+<!-- Drawer -->
+<div class="drawer" id="drawer">
+  <div class="panel card">
+    <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+      <h3 id="drTitle" style="margin:0">Редактор</h3>
+      <button class="x" id="drClose">✕</button>
+    </div>
+    <div class="row" style="margin-bottom:8px">
+      <span class="pill">Группа: <b id="drGroup">—</b></span>
+      <span class="pill">Выбрано: <b id="drSel">0</b></span>
+      <span class="pill">Нужно: <b id="drNeed">0</b></span>
+    </div>
+    <div id="drList" class="list" style="margin-bottom:10px"></div>
+    <div class="sticky">
+      <button class="btn" id="drApply">Применить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD WEIGHT -->
+<div class="overlay" id="ov-add" data-overlay>
+  <div class="popup card">
+    <div class="popheader">
+      <h3 style="margin:0 8px">Добавить вес (PR)</h3>
+      <button class="x" data-close>✕</button>
+    </div>
+    <div class="list">
+      <div class="item">
+        <div>Группа</div>
+        <select id="awGroup">
+          <option>Ноги</option><option>Грудь</option><option>Спина</option>
+          <option>Плечи</option><option>Бицепс</option><option>Трицепс</option>
+        </select>
+      </div>
+      <div class="item">
+        <div>Упражнение</div>
+        <select id="awExercise"></select>
+      </div>
+      <div class="item">
+        <div class="grow">
+          <div class="muted">Предыдущий PR: <b id="awPrev">—</b></div>
+          <div class="muted">Дата PR: <b id="awPrevDate">—</b></div>
+        </div>
+        <div>
+          <button class="btn" id="awMinus">−2.5</button>
+          <span class="pill">Δ: <b id="awDelta">0</b> кг</span>
+          <button class="btn" id="awPlus">+2.5</button>
+        </div>
+      </div>
+      <div class="row" style="justify-content:flex-end">
+        <button class="btn" id="awApply">Применить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EXERCISES -->
+<div class="overlay" id="ov-exercises" data-overlay>
+  <div class="popup card">
+    <div class="popheader">
+      <h3 style="margin:0 8px">Упражнения</h3>
+      <button class="x" data-close>✕</button>
+    </div>
+    <div class="row" style="margin-bottom:8px">
+      <select id="exGroup">
+        <option>Ноги</option><option>Грудь</option><option>Спина</option>
+        <option>Плечи</option><option>Бицепс</option><option>Трицепс</option>
+      </select>
+      <input id="exSearch" placeholder="Поиск…">
+    </div>
+    <div id="exList" class="list"></div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="overlay" id="ov-history" data-overlay>
+  <div class="popup card">
+    <div class="popheader">
+      <h3 style="margin:0 8px">История</h3>
+      <button class="x" data-close>✕</button>
+    </div>
+    <div id="histArea"></div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="overlay" id="ov-settings" data-overlay>
+  <div class="popup card">
+    <div class="popheader">
+      <h3 style="margin:0 8px">Настройки</h3>
+      <button class="x" data-close>✕</button>
+    </div>
+    <div class="list">
+      <div class="item">
+        <div>Имя пользователя</div>
+        <input id="userName" class="grow" placeholder="Антон">
+      </div>
+      <div class="item">
+        <div>Тема</div>
+        <select id="themeSel">
+          <option value="dark">Тёмная</option>
+          <option value="light">Светлая</option>
+        </select>
+      </div>
+      <div class="item">
+        <div>Данные</div>
+        <button class="btn" id="btnExport">Скачать JSON</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+"use strict";
+const $ = (id)=>document.getElementById(id);
+const fmt = (d)=> new Date(d).toLocaleDateString('ru-RU');
+function isoDateOnly(d){ const dt=new Date(d); const y=dt.getFullYear(); const m=("0"+(dt.getMonth()+1)).slice(-2); const da=("0"+dt.getDate()).slice(-2); return `${y}-${m}-${da}`; }
+function todayISO(){ return isoDateOnly(new Date()); }
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1200); }
+
+/* DB */
+const DB_KEY="ft_front_db_v2";
+let DB = { user:{name:"Антон", theme:"dark"}, exercises:[], workouts:[], measurements:[] };
+function loadDB(){ try{ const raw=localStorage.getItem(DB_KEY); if(raw) DB=JSON.parse(raw);}catch(e){} }
+function saveDB(){ localStorage.setItem(DB_KEY, JSON.stringify(DB)); }
+
+/* Seed demo exercises + measurements */
+async function loadExercisesFromJSON(){
+  try{
+    const response = await fetch('./reference_normalized (1).json');
+    const data = await response.json();
+    const exercisesByGroup = {};
+    data.records.forEach(record => {
+      const { group, number, name, value, date } = record;
+      if (!exercisesByGroup[group]) exercisesByGroup[group] = {};
+      if (!exercisesByGroup[group][number]) exercisesByGroup[group][number] = { name, values: [], dates: [] };
+      exercisesByGroup[group][number].values.push(value);
+      exercisesByGroup[group][number].dates.push(date);
+    });
+    DB.exercises = []; // Очищаем перед загрузкой, чтобы избежать дубликатов
+    for (const group of Object.keys(exercisesByGroup)){
+      const nums = Object.keys(exercisesByGroup[group]).sort((a,b)=>a-b); // Берем все номера
+      for (const num of nums){
+        if (group === "Ноги" && num === 10) continue; // Пропустить номер 10 для ног
+        const ex = exercisesByGroup[group][num];
+        const maxValue = Math.max(...ex.values);
+        const lastDate = ex.dates[ex.values.indexOf(maxValue)];
+        if (maxValue > 0 && lastDate) { // Фильтруем упражнения без PR или даты
+          DB.exercises.push({
+            id: (ex.name.toLowerCase() + "__" + group + "__" + num), // Уникальный id с номером
+            name: ex.name,
+            group: group,
+            pr: maxValue,
+            lastDate: lastDate
+          });
+        }
+      }
+    }
+  } catch(e){
+    console.error("Ошибка загрузки JSON:", e);
+    toast("Ошибка загрузки данных из JSON");
+  }
+}
+
+function seedIfEmpty(){
+  if(!DB.exercises.length){
+    loadExercisesFromJSON(); // Загружаем из JSON асинхронно
+  }
+  if(!DB.measurements.length){
+    DB.measurements = [
+      {
+        date: "2020-10-14",
+        waist: 92,
+        chest_back: 96,
+        arm_r: 38,
+        arm_l: 38,
+        thigh_r: 98,
+        thigh_l: 98,
+        forearm_r: 30,
+        forearm_l: 30
+      },
+      {
+        date: "2025-01-12",
+        waist: 102,
+        chest_back: 102,
+        arm_r: 41,
+        arm_l: 41,
+        thigh_r: 102,
+        thigh_l: 102,
+        forearm_r: 30,
+        forearm_l: 30
+      },
+      {
+        date: "2025-07-31",
+        waist: 96.5,
+        chest_back: 116.0,
+        arm_r: 40.5,
+        arm_l: 40.6,
+        thigh_r: 59.0,
+        thigh_l: 59.5,
+        forearm_r: 33.0,
+        forearm_l: 32.5
+      }
+    ];
+  }
+}
+
+/* Theme & User */
+function applyTheme(){ document.documentElement.setAttribute("data-theme", DB.user.theme||"dark"); $("themeLabel").textContent = DB.user.theme==="light"?"Светлая":"Тёмная"; }
+function syncUserUI(){ $("userLabel").textContent=DB.user.name||"—"; $("userName").value=DB.user.name||""; $("themeSel").value=DB.user.theme||"dark"; applyTheme(); }
+
+/* Plan state */
+const CYCLE={1:{main:"Ноги",aux:"Плечи"},2:{main:"Грудь",aux:"Бицепс"},3:{main:"Спина",aux:"Трицепс"}};
+let PLAN=null;
+function lastWorkout(){ if(!DB.workouts.length) return null; return DB.workouts.slice().sort((a,b)=> new Date(b.date)-new Date(a.date))[0]; }
+function suggestedDay(){ const lw=lastWorkout(); if(!lw) return 1; return lw.day===3?1:lw.day+1; }
+function setPrevWorkoutLabel(){ const lw=lastWorkout(); $("prevWorkout").textContent = lw? `${fmt(lw.date)} · День ${lw.day} (${lw.mainGroup}/${lw.auxGroup})` : "—"; }
+function setInitPlanHeader(){ $("planDate").value=todayISO(); $("daySel").value=String(suggestedDay()); }
+
+function defaultCooldown(day){ return day===1?["Планка/кор","Пресс"]:(day===2?["МФР/ролик","Подвижность плеч"]:["Хват/вис","Осанка/мобилити"]); }
+
+function planGenerate(){
+  const day=Number($("daySel").value); const dateISO=$("planDate").value||todayISO();
+  const mainGroup=CYCLE[day].main, auxGroup=CYCLE[day].aux;
+  const exMain = DB.exercises.filter(e=> e.group===mainGroup).slice(0,3);
+  const exAux  = DB.exercises.filter(e=> e.group===auxGroup).slice(0,2);
+  PLAN = {
+    dateISO, day, mainGroup, auxGroup,
+    main: exMain.map(e=> ({exId:e.id, name:e.name, sets:4, pr:(e.pr==null?0:e.pr)})),
+    aux:  exAux.map(e=> ({exId:e.id, name:e.name, sets:4, pr:(e.pr==null?0:e.pr)})),
+    cooldown: defaultCooldown(day),
+    increments:{}
+  };
+  renderPlanArea(); $("btnSave").disabled=false; toast("План сгенерирован");
+}
+
+function renderPlanArea(){
+  const box=$("planArea");
+  if(!PLAN){ box.innerHTML='<div class="empty">Сгенерируйте план, чтобы увидеть упражнения.</div>'; return; }
+  const makeRow=(it)=>{
+    const ex=DB.exercises.find(x=> x.id===it.exId);
+    const base = (typeof it.pr==="number")? it.pr : (typeof ex?.pr==="number"? ex.pr : 0);
+    const inc = PLAN.increments[it.exId]||0;
+    const shown = base + (inc? inc:0);
+    const row=document.createElement("div"); row.className="item";
+    row.innerHTML = `<div><b>${it.name}</b><div class="muted">${it.sets} подхода · PR: <b>${(base||0)} кг</b></div></div>`;
+    const right=document.createElement("div");
+    right.innerHTML = `<span class="tag">К сохранению: ${shown} кг</span> <button class="btn plus">+2.5</button>`;
+    right.querySelector(".plus").addEventListener("click", ()=>{ PLAN.increments[it.exId]=(PLAN.increments[it.exId]||0)+2.5; renderPlanArea(); });
+    row.appendChild(right); return row;
+  };
+  box.innerHTML="";
+  const h1=document.createElement("div"); h1.className="muted"; h1.textContent="Основные (3)"; box.appendChild(h1);
+  PLAN.main.forEach(it=> box.appendChild(makeRow(it)));
+  const h2=document.createElement("div"); h2.className="muted"; h2.style.marginTop="6px"; h2.textContent="Дополнительные (2…3)"; box.appendChild(h2);
+  PLAN.aux.forEach(it=> box.appendChild(makeRow(it)));
+  const h3=document.createElement("div"); h3.className="muted"; h3.style.marginTop="6px"; h3.textContent="Заминка (2)"; box.appendChild(h3);
+  PLAN.cooldown.forEach(n=>{ const row=document.createElement("div"); row.className="item"; row.innerHTML = `<div><b>${n}</b><div class="muted">без весов</div></div>`; box.appendChild(row); });
+}
+
+/* Drawer editors */
+let DR={role:null,need:0,group:null};
+function openDrawer(role){
+  if(!PLAN){ toast("Сначала сгенерируйте план"); return; }
+  DR.role=role; const isMain=role==="main"; DR.group=isMain?PLAN.mainGroup:(role==="aux"?PLAN.auxGroup:"Заминка"); DR.need=role==="cool"?2:(isMain?3:2);
+  $("drTitle").textContent = isMain? "Редактор основной" : (role==="aux"?"Редактор дополнительной":"Редактор заминки");
+  $("drGroup").textContent=DR.group; $("drNeed").textContent=DR.need;
+  const list=$("drList"); list.innerHTML="";
+  if(role==="cool"){
+    const options=["Планка/кор","Пресс","МФР/ролик","Подвижность плеч","Хват/вис","Осанка/мобилити"]; const picked=new Set(PLAN.cooldown);
+    options.forEach(name=>{ const row=document.createElement("label"); row.className="item";
+      const chk=document.createElement("input"); chk.type="checkbox"; chk.checked=picked.has(name); chk.addEventListener("change", updateDrSel);
+      row.appendChild(document.createElement("div")).innerHTML=`<b>${name}</b>`; row.appendChild(chk); list.appendChild(row);
+    });
+  } else {
+    const arr = DB.exercises.filter(e=> e.group===DR.group).slice().sort((a,b)=>{
+      const ad=a.lastDate? new Date(a.lastDate):null, bd=b.lastDate? new Date(b.lastDate):null;
+      if(!ad && bd) return -1; if(ad && !bd) return 1; if(!ad && !bd) return a.name.localeCompare(b.name); return ad-bd || a.name.localeCompare(b.name);
+    });
+    const picked = new Set((role==="main"?PLAN.main:PLAN.aux).map(x=> x.exId));
+    arr.forEach(ex=>{ const row=document.createElement("label"); row.className="item";
+      const last=ex.lastDate? fmt(ex.lastDate):"—"; const pr=(ex.pr==null?"—":ex.pr+" кг");
+      const left=document.createElement("div"); left.innerHTML=`<div><b>${ex.name}</b></div><div class="muted">Подходы: 4 · PR: ${pr} · Последний раз: ${last}</div>`;
+      const chk=document.createElement("input"); chk.type="checkbox"; chk.checked=picked.has(ex.id); chk.addEventListener("change", updateDrSel);
+      row.appendChild(left); row.appendChild(chk); list.appendChild(row); row.dataset.exid=ex.id; row.dataset.name=ex.name;
+    });
+  }
+  updateDrSel(); $("drawer").classList.add("open");
+}
+function updateDrSel(){ const checks=[...$("drList").querySelectorAll('input[type="checkbox"]')]; $("drSel").textContent = checks.filter(c=> c.checked).length; }
+function closeDrawer(){ $("drawer").classList.remove("open"); }
+$("drClose").addEventListener("click", closeDrawer); $("drawer").addEventListener("click",(e)=>{ if(e.target===e.currentTarget) closeDrawer(); });
+$("drApply").addEventListener("click", ()=>{
+  const checks=[...$("drList").querySelectorAll('input[type="checkbox"]')]; const chosen=checks.map((c,i)=> c.checked? $("drList").children[i]:null).filter(Boolean);
+  if(DR.role==="cool"){ if(chosen.length!==2){ toast("Нужно выбрать ровно 2"); return; } PLAN.cooldown=chosen.map(r=> r.querySelector("b").textContent); closeDrawer(); renderPlanArea(); toast("Заминка обновлена"); return; }
+  if(DR.role==="main" && chosen.length!==3){ toast("Основная: выберите ровно 3"); return; }
+  if(DR.role==="aux" && (chosen.length<2 || chosen.length>3)){ toast("Доп.: выберите 2 или 3"); return; }
+  const mapped = chosen.map(row=>{ const exId=row.dataset.exid, name=row.dataset.name; const ex=DB.exercises.find(e=> e.id===exId); return {exId,name,sets:4,pr:(ex?.pr??0)}; });
+  if(DR.role==="main") PLAN.main=mapped; else PLAN.aux=mapped; closeDrawer(); renderPlanArea(); toast("Обновлено");
+});
+
+/* Save workout */
+function saveWorkout(){
+  if(!PLAN){ toast("Сначала сгенерируйте план"); return; }
+  const dateISO=PLAN.dateISO||todayISO();
+  const applyInc=(arr)=> arr.map(it=>{
+    const inc=PLAN.increments[it.exId]||0; const ex=DB.exercises.find(e=> e.id===it.exId);
+    const old = (typeof ex?.pr==="number")? ex.pr : ((typeof it.pr==="number")? it.pr : 0);
+    const newPR = inc? (old+inc) : (ex?.pr ?? null); // если 0 добавки и не было PR — не пишем 0
+    if(newPR!=null && ex){ ex.pr=newPR; }
+    if(ex){ ex.lastDate=dateISO; }
+    return {name:it.name, sets:it.sets, weight:(newPR ?? null)};
+  });
+  const rec={ date:dateISO, day:PLAN.day, mainGroup:PLAN.mainGroup, auxGroup:PLAN.auxGroup, main:applyInc(PLAN.main), aux:applyInc(PLAN.aux), cooldown:PLAN.cooldown.slice(0,2) };
+  DB.workouts.push(rec); saveDB(); setPrevWorkoutLabel(); $("btnSave").disabled=true; toast("Тренировка сохранена");
+}
+
+/* Add Weight overlay */
+let AW={group:"Грудь", exId:null, delta:0};
+function openAddWeight(){ const def=(PLAN?.mainGroup)||"Грудь"; $("awGroup").value=def; AW.group=def; AW.delta=0; updateAWExercises(); updateAWInfo(); document.getElementById("ov-add").classList.add("open"); }
+function updateAWExercises(){ const sel=$("awExercise"); sel.innerHTML=""; const list=DB.exercises.filter(e=> e.group===AW.group); list.forEach(e=>{ const o=document.createElement("option"); o.value=e.id; o.textContent=e.name; sel.appendChild(o); }); AW.exId=sel.value||null; }
+function updateAWInfo(){ const ex=DB.exercises.find(e=> e.id===AW.exId); const pr=ex?.pr; const last=ex?.lastDate; $("awPrev").textContent=(pr==null?"—":pr+" кг"); $("awPrevDate").textContent=last?fmt(last):"—"; $("awDelta").textContent=AW.delta; }
+$("awGroup").addEventListener("change",(e)=>{ AW.group=e.target.value; AW.delta=0; updateAWExercises(); updateAWInfo(); });
+$("awExercise").addEventListener("change",()=>{ AW.delta=0; updateAWInfo(); });
+$("awPlus").addEventListener("click",()=>{ AW.delta+=2.5; updateAWInfo(); });
+$("awMinus").addEventListener("click",()=>{ AW.delta=Math.max(0,AW.delta-2.5); updateAWInfo(); });
+$("awApply").addEventListener("click",()=>{ if(!AW.exId){toast("Выберите упражнение"); return;} const ex=DB.exercises.find(e=> e.id===AW.exId); const old=(typeof ex.pr==="number")?ex.pr:0; if(AW.delta===0){toast("Нечего добавлять"); return;} ex.pr=old+AW.delta; ex.lastDate=todayISO(); saveDB(); toast("PR обновлён"); document.getElementById("ov-add").classList.remove("open"); });
+
+/* Exercises */
+function renderExercises(){ const g=$("exGroup").value; const q=$("exSearch").value.trim().toLowerCase(); const list=$("exList"); list.innerHTML=""; DB.exercises.filter(e=> e.group===g).filter(e=> !q || e.name.toLowerCase().includes(q)).forEach(ex=>{ const last=ex.lastDate?fmt(ex.lastDate):"—"; const pr=ex.pr==null?"—":(ex.pr+" кг"); const row=document.createElement("div"); row.className="item"; row.innerHTML=`<div><b>${ex.name}</b><div class="muted">PR: ${pr} · Последний раз: ${last} · Подходы: 4</div></div><span class="tag">${ex.group}</span>`; list.appendChild(row); }); }
+$("exGroup").addEventListener("change", renderExercises);
+$("exSearch").addEventListener("input", renderExercises);
+
+/* History */
+function renderHistory(){
+  const area=$("histArea"); area.innerHTML="";
+  if(!DB.measurements.length){
+    area.innerHTML='<div class="empty">Пока нет замеров.</div>';
+    return;
+  }
+  // Создаем таблицу
+  const table=document.createElement("div"); table.className="history-table";
+  const sortedMeasurements = DB.measurements.slice().sort((a,b)=> new Date(a.date)-new Date(b.date)); // Сортируем по дате (старые слева)
+  const header=document.createElement("div"); header.className="history-header";
+  header.innerHTML='<div>Замер</div>' + sortedMeasurements.map(m=> `<div>${fmt(m.date)}</div>`).join('') + '<div><button class="btn" id="addMeasurement">Добавить</button></div>';
+  table.appendChild(header);
+  const measurements = [
+    {key:"waist", label:"Талия"},
+    {key:"chest_back", label:"Спина–грудь"},
+    {key:"arm_r", label:"Рука правая"},
+    {key:"arm_l", label:"Рука левая"},
+    {key:"thigh_r", label:"Бедро правое"},
+    {key:"thigh_l", label:"Бедро левое"},
+    {key:"forearm_r", label:"Предплечье правое"},
+    {key:"forearm_l", label:"Предплечье левое"}
+  ];
+  measurements.forEach(measure=>{
+    const row=document.createElement("div"); row.className="history-row";
+    const cells = ['<div>' + measure.label + '</div>'];
+    sortedMeasurements.forEach(m=>{
+      let value = m[measure.key] + ' см';
+      if ((measure.key === 'thigh_r' || measure.key === 'thigh_l') && (m.date === '2020-10-14' || m.date === '2025-01-12')) {
+        value = m[measure.key] + '* см';
+      }
+      cells.push('<div>' + value + '</div>');
+    });
+    cells.push('<div></div>');
+    row.innerHTML = cells.join('');
+    table.appendChild(row);
+  });
+  area.appendChild(table);
+  // Сноска
+  const note = document.createElement("div"); note.className="muted"; note.textContent = "* Обхват бедер"; note.style.fontSize="12px"; note.style.marginTop="8px";
+  area.appendChild(note);
+  // Форма добавления
+  const form=document.createElement("div"); form.className="history-form"; form.id="measurementForm"; form.style.display="none";
+  form.innerHTML=`
+    <h4>Добавить замер</h4>
+    <div class="row" style="margin-bottom:8px">
+      <label class="pill">Дата<input id="newDate" type="date" value="${todayISO()}"></label>
+    </div>
+    <div class="list">
+      ${measurements.map(m=> `<div class="item"><div>${m.label}</div><input id="new${m.key}" type="number" step="0.1" placeholder="см"></div>`).join('')}
+    </div>
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn" id="cancelAdd">Отмена</button>
+      <button class="btn" id="saveAdd">Сохранить</button>
+    </div>
+  `;
+  area.appendChild(form);
+  // Слушатели
+  $("addMeasurement").addEventListener("click", ()=> form.style.display="block");
+  $("cancelAdd").addEventListener("click", ()=> form.style.display="none");
+  $("saveAdd").addEventListener("click", ()=>{
+    const newDate=$("newDate").value;
+    const newMeasurement={date:newDate};
+    let allFilled=true;
+    measurements.forEach(m=>{
+      const val=parseFloat($(`new${m.key}`).value);
+      if(isNaN(val)){ allFilled=false; } else { newMeasurement[m.key]=val; }
+    });
+    if(!allFilled || !newDate){ toast("Заполните все поля"); return; }
+    DB.measurements.push(newMeasurement);
+    saveDB();
+    renderHistory();
+    toast("Замер добавлен");
+  });
+}
+
+/* Settings */
+$("userName").addEventListener("blur",(e)=>{ DB.user.name=e.target.value.trim()||"Антон"; saveDB(); syncUserUI(); toast("Имя сохранено"); });
+$("themeSel").addEventListener("change",(e)=>{ DB.user.theme=e.target.value; saveDB(); syncUserUI(); toast("Тема применена"); });
+$("btnExport").addEventListener("click", ()=>{ const blob=new Blob([JSON.stringify(DB,null,2)], {type:"application/json"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="fitness-data.json"; a.click(); URL.revokeObjectURL(url); });
+
+/* Overlays */
+document.querySelectorAll('[data-open]').forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    const id="ov-"+btn.getAttribute("data-open");
+    document.getElementById(id).classList.add("open");
+    if(id==="ov-exercises") renderExercises();
+    if(id==="ov-plan"){ setPrevWorkoutLabel(); setInitPlanHeader(); }
+    if(id==="ov-history") renderHistory();
+  });
+});
+document.querySelectorAll('[data-overlay]').forEach(ov=>{
+  ov.addEventListener("click",(e)=>{ if(e.target===ov) ov.classList.remove("open"); });
+  ov.querySelector('[data-close]').addEventListener("click",()=> ov.classList.remove("open"));
+});
+document.addEventListener("keydown",(e)=>{
+  if(e.key==="Escape"){
+    document.querySelectorAll(".overlay.open").forEach(ov=> ov.classList.remove("open"));
+    if(document.getElementById("drawer").classList.contains("open")) document.getElementById("drawer").classList.remove("open");
+  }
+});
+
+/* Plan buttons */
+$("btnGen").addEventListener("click", ()=>{ PLAN=null; $("btnSave").disabled=true; planGenerate(); });
+$("btnEditMain").addEventListener("click", ()=> openDrawer("main"));
+$("btnEditAux").addEventListener("click", ()=> openDrawer("aux"));
+$("btnEditCool").addEventListener("click", ()=> openDrawer("cool"));
+$("btnAddWeight").addEventListener("click", openAddWeight);
+$("btnSave").addEventListener("click", saveWorkout);
+
+/* Init */
+(async function(){ 
+  loadDB(); 
+  await loadExercisesFromJSON(); // Ждем загрузки упражнений
+  seedIfEmpty(); 
+  saveDB(); // Сохраняем обновленные данные
+  syncUserUI(); 
+})();
+</script>
+</body>
+</html>
