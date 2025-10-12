@@ -533,6 +533,8 @@ function addNewColumn(){
   // Обновляем CSS для таблицы
   const table = document.querySelector(".history-table");
   table.style.gridTemplateColumns = `200px repeat(${newColIndex + 1}, 150px)`;
+  // Перерисовываем таблицу для обновления grid
+  renderHistory();
 }
 
 function saveColumn(col){
