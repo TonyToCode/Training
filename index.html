@@ -459,14 +459,24 @@ function renderHistory(){
   // Создаем таблицу с 5 колонками
   const table=document.createElement("div"); table.className="history-table";
   const header=document.createElement("div"); header.className="history-header";
-  header.innerHTML='<div>Колонка 1</div><div>Колонка 2</div><div>Колонка 3</div><div>Колонка 4</div><div>Колонка 5</div>';
+  header.innerHTML='<div>Замер</div><div>Колонка 2</div><div>Колонка 3</div><div>Колонка 4</div><div>Колонка 5</div>';
   table.appendChild(header);
-  // Пустые строки для примера
-  for(let i=0; i<8; i++){
+  const measurements = [
+    {key:"waist", label:"Талия"},
+    {key:"chest_back", label:"Спина–грудь"},
+    {key:"arm_r", label:"Рука правая"},
+    {key:"arm_l", label:"Рука левая"},
+    {key:"thigh_r", label:"Бедро правое"},
+    {key:"thigh_l", label:"Бедро левое"},
+    {key:"forearm_r", label:"Предплечье правое"},
+    {key:"forearm_l", label:"Предплечье левое"}
+  ];
+  // Ряды с названиями замеров
+  measurements.forEach(measure=>{
     const row=document.createElement("div"); row.className="history-row";
-    row.innerHTML='<div>Ряд ' + (i+1) + '</div><div></div><div></div><div></div><div></div>';
+    row.innerHTML='<div>' + measure.label + '</div><div></div><div></div><div></div><div></div>';
     table.appendChild(row);
-  }
+  });
   area.appendChild(table);
 }
 /* Settings */
