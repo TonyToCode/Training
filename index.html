@@ -465,7 +465,7 @@ function renderHistory(){
     <div id="col2Header"><input id="date2" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
     <div id="col3Header"><input id="date3" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
     <div id="col4Header"><input id="date4" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-    <div id="addColumn"><input id="date5" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+    <div id="addNewColumn">Добавить</div>
   `;
   table.appendChild(header);
   const measurements = [
@@ -486,7 +486,7 @@ function renderHistory(){
       <div><input id="input${measure.key}_2" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
       <div><input id="input${measure.key}_3" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
       <div><input id="input${measure.key}_4" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-      <div><input id="input${measure.key}" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+      <div></div>
     `;
     table.appendChild(row);
   });
@@ -502,7 +502,38 @@ function renderHistory(){
   $("col2Header").addEventListener("click", ()=> saveColumn(2));
   $("col3Header").addEventListener("click", ()=> saveColumn(3));
   $("col4Header").addEventListener("click", ()=> saveColumn(4));
-  $("addColumn").addEventListener("click", ()=> saveMeasurements());
+  $("addNewColumn").addEventListener("click", ()=> addNewColumn());
+}
+
+function addNewColumn(){
+  // Добавляем новую колонку с датой и input полями
+  const newDate = todayISO();
+  const newColIndex = 5; // Следующая колонка
+  // Обновляем заголовок
+  const addColumn = $("addNewColumn");
+  addColumn.innerHTML = `<input id="date${newColIndex}" type="date" value="${newDate}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);>`;
+  addColumn.id = `col${newColIndex}Header`;
+  // Обновляем ряды
+  const rows = document.querySelectorAll(".history-row");
+  rows.forEach((row, index)=>{
+    const measure = measurements[index];
+    const newCell = document.createElement("div");
+    newCell.innerHTML = `<input id="input${measure.key}_${newColIndex}" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>`;
+    row.appendChild(newCell);
+  });
+  // Добавляем слушатель для новой колонки
+  $(`col${newColIndex}Header`).addEventListener("click", ()=> saveColumn(newColIndex));
+  // Добавляем новую кнопку "Добавить" после новой колонки
+  const newAddColumn = document.createElement("div");
+  newAddColumn.id = "addNewColumn";
+  newAddColumn.textContent = "Добавить";
+  newAddColumn.style.cursor = "pointer";
+  newAddColumn.style.color = "var(--accent)";
+  newAddColumn.addEventListener("click", ()=> addNewColumn());
+  header.appendChild(newAddColumn);
+  // Обновляем CSS для таблицы
+  const table = document.querySelector(".history-table");
+  table.style.gridTemplateColumns = `200px repeat(${newColIndex + 1}, 150px)`;
 }
 
 function saveColumn(col){
