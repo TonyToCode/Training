@@ -456,10 +456,15 @@ $("exSearch").addEventListener("input", renderExercises);
 
 function renderHistory(){
   const area=$("measurementsArea"); area.innerHTML="";
+  if(!DB.measurements.length){
+    area.innerHTML='<div class="empty">Пока нет замеров.</div>';
+    return;
+  }
   // Создаем таблицу с 5 колонками
   const table=document.createElement("div"); table.className="history-table";
+  const sortedMeasurements = DB.measurements.slice().sort((a,b)=> new Date(a.date)-new Date(b.date)); // Сортируем по дате (старые слева)
   const header=document.createElement("div"); header.className="history-header";
-  header.innerHTML='<div>Замер</div><div>Колонка 2</div><div>Колонка 3</div><div>Колонка 4</div><div>Колонка 5</div>';
+  header.innerHTML='<div>Замер</div>' + sortedMeasurements.map(m=> `<div>${fmt(m.date)}</div>`).join('') + '<div><button class="btn" id="addMeasurement">Добавить</button></div>';
   table.appendChild(header);
   const measurements = [
     {key:"waist", label:"Талия"},
@@ -471,13 +476,62 @@ function renderHistory(){
     {key:"forearm_r", label:"Предплечье правое"},
     {key:"forearm_l", label:"Предплечье левое"}
   ];
-  // Ряды с названиями замеров
   measurements.forEach(measure=>{
     const row=document.createElement("div"); row.className="history-row";
-    row.innerHTML='<div>' + measure.label + '</div><div></div><div></div><div></div><div></div>';
+    const cells = ['<div>' + measure.label + '</div>'];
+    sortedMeasurements.forEach(m=>{
+      let value = m[measure.key] + ' см';
+      if ((measure.key === 'thigh_r' || measure.key === 'thigh_l') && (m.date === '2020-10-14' || m.date === '2025-01-12')) {
+        value = m[measure.key] + '* см';
+      }
+      cells.push('<div>' + value + '</div>');
+    });
+    cells.push('<div></div>');
+    row.innerHTML = cells.join('');
     table.appendChild(row);
   });
-  area.appendChild(table);
+  // Сноска
+  const note = document.createElement("div"); note.className="muted"; note.textContent = "* Обхват бедер"; note.style.fontSize="12px"; note.style.marginTop="8px";
+  area.appendChild(note);
+  // Форма добавления внизу
+  const form=document.createElement("div"); form.className="history-form"; form.id="measurementForm"; form.style.display="none";
+  form.innerHTML=`
+    <h4>Добавить замер</h4>
+    <div class="row" style="margin-bottom:8px">
+      <label class="pill">Дата<input id="newDate" type="date" value="${todayISO()}"></label>
+    </div>
+    <div class="list">
+      ${measurements.map(m=> `<div class="item"><div>${m.label}</div><input id="new${m.key}" type="number" step="0.1" placeholder="см"></div>`).join('')}
+    </div>
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn" id="cancelAdd">Отмена</button>
+      <button class="btn" id="saveAdd">Сохранить</button>
+    </div>
+  `;
+  area.appendChild(form);
+  // Слушатели для формы
+  if($("addMeasurement")){
+    $("addMeasurement").addEventListener("click", ()=> form.style.display="block");
+  }
+  if($("cancelAdd")){
+    $("cancelAdd").addEventListener("click", ()=> form.style.display="none");
+  }
+  if($("saveAdd")){
+    $("saveAdd").addEventListener("click", ()=>{
+      const newDate=$("newDate").value;
+      const newMeasurement={date:newDate};
+      let allFilled=true;
+      measurements.forEach(m=>{
+        const val=parseFloat($(`new${m.key}`).value);
+        if(isNaN(val)){ allFilled=false; } else { newMeasurement[m.key]=val; }
+      });
+      if(!allFilled || !newDate){ toast("Заполните все поля"); return; }
+      DB.measurements.push(newMeasurement);
+      saveDB();
+      renderHistory();
+      toast("Замер добавлен");
+    });
+  }
 }
 /* Settings */
 $("userName").addEventListener("blur",(e)=>{ DB.user.name=e.target.value.trim()||"Антон"; saveDB(); syncUserUI(); toast("Имя сохранено"); });
