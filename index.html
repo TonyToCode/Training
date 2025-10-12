@@ -457,7 +457,7 @@ $("exSearch").addEventListener("input", renderExercises);
 
 function renderHistory(){
   const area=$("measurementsArea"); area.innerHTML="";
-  // Создаем таблицу с динамическими колонками
+  // Создаем таблицу с 5 колонками
   const table=document.createElement("div"); table.className="history-table";
   const header=document.createElement("div"); header.className="history-header";
   header.innerHTML=`
@@ -465,7 +465,7 @@ function renderHistory(){
     <div id="col2Header"><input id="date2" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
     <div id="col3Header"><input id="date3" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
     <div id="col4Header"><input id="date4" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-    <div id="addNewColumn">Добавить</div>
+    <div id="col5Header"><input id="date5" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
   `;
   table.appendChild(header);
   const measurements = [
@@ -486,7 +486,7 @@ function renderHistory(){
       <div><input id="input${measure.key}_2" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
       <div><input id="input${measure.key}_3" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
       <div><input id="input${measure.key}_4" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-      <div></div>
+      <div><input id="input${measure.key}_5" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
     `;
     table.appendChild(row);
   });
@@ -502,7 +502,23 @@ function renderHistory(){
   $("col2Header").addEventListener("click", ()=> saveColumn(2));
   $("col3Header").addEventListener("click", ()=> saveColumn(3));
   $("col4Header").addEventListener("click", ()=> saveColumn(4));
-  $("addNewColumn").addEventListener("click", ()=> addNewColumn());
+  $("col5Header").addEventListener("click", ()=> saveColumn(5));
+}
+
+function saveColumn(col){
+  const newDate=$(`date${col}`).value;
+  const newMeasurement={date:newDate};
+  let allFilled=true;
+  measurements.forEach(m=>{
+    const val=parseFloat($(`input${m.key}_${col}`).value);
+    if(isNaN(val)){ allFilled=false; } else { newMeasurement[m.key]=val; }
+  });
+  if(!allFilled || !newDate){ toast("Заполните все поля"); return; }
+  DB.measurements.push(newMeasurement);
+  saveDB();
+  saveMeasurementsToFile();
+  renderHistory();
+  toast("Колонка сохранена");
 }
 
 function addNewColumn(){
