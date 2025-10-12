@@ -491,6 +491,13 @@ function renderHistory(){
     table.appendChild(row);
   });
   area.appendChild(table);
+  // Кнопка Сохранить
+  const saveButton = document.createElement("button");
+  saveButton.className = "btn";
+  saveButton.textContent = "Сохранить";
+  saveButton.style.marginTop = "16px";
+  saveButton.addEventListener("click", saveMeasurementsToFile);
+  area.appendChild(saveButton);
   // Слушатели для заголовков колонок
   $("col2Header").addEventListener("click", ()=> saveColumn(2));
   $("col3Header").addEventListener("click", ()=> saveColumn(3));
