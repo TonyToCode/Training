@@ -369,46 +369,9 @@ function seedIfEmpty(){
   if(!DB.exercises.length){
     loadExercisesFromJSON(); // Загружаем из JSON асинхронно
   }
-  // Добавляем демо-данные ТОЛЬКО если нет данных из Firebase И нет локальных данных
-  if(DB.measurements.length === 0){
-    console.log("📋 Добавляем демо-данные замеров");
-    DB.measurements = [
-      {
-        date: "2020-10-14",
-        waist: 92,
-        chest_back: 96,
-        arm_r: 38,
-        arm_l: 38,
-        thigh_r: 98,
-        thigh_l: 98,
-        forearm_r: 30,
-        forearm_l: 30
-      },
-      {
-        date: "2025-01-12",
-        waist: 102,
-        chest_back: 102,
-        arm_r: 41,
-        arm_l: 41,
-        thigh_r: 102,
-        thigh_l: 102,
-        forearm_r: 30,
-        forearm_l: 30
-      },
-      {
-        date: "2025-07-31",
-        waist: 96.5,
-        chest_back: 116.0,
-        arm_r: 40.5,
-        arm_l: 40.6,
-        thigh_r: 59.0,
-        thigh_l: 59.5,
-        forearm_r: 33.0,
-        forearm_l: 32.5
-      }
-    ];
-    loadedMeasurements = [...DB.measurements];
-  }
+  // НЕ добавляем демо-данные автоматически!
+  // Показываем пустую таблицу если нет данных из Firebase
+  console.log(`📊 Доступно замеров: ${DB.measurements.length}`);
 }
 
 /* Theme & User */
@@ -549,19 +512,14 @@ function renderHistory(){
     <div id="col4Header"><input id="date4" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
     <div id="col5Header"><input id="date5" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
   `;
-  table.appendChild(header);
-
-  // Используем глобальную переменную measurementsList
-  measurementsList = [
-    {key:"waist", label:"Талия"},
-    {key:"chest_back", label:"Спина–грудь"},
-    {key:"arm_r", label:"Рука правая"},
-    {key:"arm_l", label:"Рука левая"},
-    {key:"thigh_r", label:"Бедро правое"},
-    {key:"thigh_l", label:"Бедро левое"},
-    {key:"forearm_r", label:"Предплечье правое"},
-    {key:"forearm_l", label:"Предплечье левое"}
-  ];
+  // Если нет данных из Firebase, показываем пустую таблицу
+  if (DB.measurements.length === 0) {
+    const emptyMessage = document.createElement("div");
+    emptyMessage.className = "empty";
+    emptyMessage.textContent = "Нет сохраненных замеров. Введите данные и нажмите 'Сохранить'.";
+    area.appendChild(emptyMessage);
+    return;
+  }
 
   // Ряды с названиями замеров и input полями в колонках
   measurementsList.forEach(measure=>{
@@ -575,6 +533,17 @@ function renderHistory(){
     `;
     table.appendChild(row);
   });
+  // Заполняем таблицу существующими данными из DB.measurements
+  DB.measurements.forEach((measurement, index) => {
+    const colIndex = index + 2; // колонки начинаются с 2
+    $(`date${colIndex}`).value = measurement.date;
+    measurementsList.forEach(measure => {
+      const input = $(`input${measure.key}_${colIndex}`);
+      if (input && measurement[measure.key] !== undefined) {
+        input.value = measurement[measure.key];
+      }
+    });
+  });
   area.appendChild(table);
   // Кнопка Сохранить
   const saveButton = document.createElement("button");
@@ -586,20 +555,7 @@ function renderHistory(){
     await saveAllMeasurementsToFirebase();
   });
 
-  // Тестовая кнопка для сохранения демо-данных
-  const testButton = document.createElement("button");
-  testButton.className = "btn";
-  testButton.textContent = "Сохранить демо-данные";
-  testButton.style.marginTop = "16px";
-  testButton.style.marginLeft = "8px";
-  testButton.style.backgroundColor = "var(--accent)";
-  testButton.addEventListener("click", async ()=>{
-    console.log("🧪 Сохраняем демо-данные в Firebase...");
-    await saveAllMeasurementsToFirebase();
-  });
-
   area.appendChild(saveButton);
-  area.appendChild(testButton);
   // Слушатели для заголовков колонок
   $("col2Header").addEventListener("click", ()=> saveColumn(2));
   $("col3Header").addEventListener("click", ()=> saveColumn(3));
