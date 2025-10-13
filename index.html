@@ -549,34 +549,49 @@ function renderHistory(){
 
     // Собираем данные из input полей и добавляем в DB.measurements
     let hasData = false;
-    measurementsList.forEach(m => {
-      const input = $(`input${m.key}_2`);
-      if (input && input.value && parseFloat(input.value) > 0) {
-        console.log(`${m.label}: ${input.value}`);
-        hasData = true;
 
-        // Создаем замер из данных колонки 2
-        const newDate = $(`date2`).value;
-        if (newDate) {
-          const newMeasurement = {date: newDate};
-          measurementsList.forEach(measure => {
-            const val = parseFloat($(`input${measure.key}_2`).value);
-            if (!isNaN(val)) {
-              newMeasurement[measure.key] = val;
-            }
-          });
+    // Проверяем колонку 2 (основная колонка)
+    const date2 = $("date2").value;
+    console.log(`📅 Дата колонки 2: ${date2}`);
 
-          if (!DB.measurements.some(m => m.date === newDate)) {
-            DB.measurements.push(newMeasurement);
-            console.log(`➕ Добавлен замер ${newDate} в DB.measurements`);
-          }
+    if (date2) {
+      const newMeasurement = {date: date2};
+      let allFilled = true;
+
+      measurementsList.forEach(m => {
+        const input = $(`input${m.key}_2`);
+        const val = parseFloat(input.value);
+        console.log(`${m.label} (${m.key}_2): ${val} (input value: ${input.value})`);
+
+        if (isNaN(val) || val <= 0) {
+          allFilled = false;
+          console.log(`❌ ${m.label} не заполнен или некорректное значение`);
+        } else {
+          newMeasurement[m.key] = val;
+          console.log(`✅ ${m.label}: ${val}`);
+          hasData = true;
         }
-      }
-    });
+      });
 
-    if (!hasData) {
-      console.log("⚠️ Нет данных в input полях");
-      toast("Заполните данные в таблице");
+      if (allFilled && hasData) {
+        console.log(`✅ Создан замер:`, newMeasurement);
+
+        // Проверяем дубликаты
+        const isDuplicate = DB.measurements.some(m => m.date === newMeasurement.date);
+        if (!isDuplicate) {
+          DB.measurements.push(newMeasurement);
+          console.log(`➕ Добавлен замер ${newDate} в DB.measurements`);
+        } else {
+          console.log(`⚠️ Замер с датой ${newDate} уже существует`);
+        }
+      } else {
+        console.log(`❌ Не все поля заполнены или дата пустая`);
+        toast("Заполните все поля и выберите дату");
+        return;
+      }
+    } else {
+      console.log(`❌ Дата не выбрана`);
+      toast("Выберите дату");
       return;
     }
 
