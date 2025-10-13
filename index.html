@@ -585,7 +585,21 @@ function renderHistory(){
     console.log("💾 Сохраняем все данные в Firebase");
     await saveAllMeasurementsToFirebase();
   });
+
+  // Тестовая кнопка для сохранения демо-данных
+  const testButton = document.createElement("button");
+  testButton.className = "btn";
+  testButton.textContent = "Сохранить демо-данные";
+  testButton.style.marginTop = "16px";
+  testButton.style.marginLeft = "8px";
+  testButton.style.backgroundColor = "var(--accent)";
+  testButton.addEventListener("click", async ()=>{
+    console.log("🧪 Сохраняем демо-данные в Firebase...");
+    await saveAllMeasurementsToFirebase();
+  });
+
   area.appendChild(saveButton);
+  area.appendChild(testButton);
   // Слушатели для заголовков колонок
   $("col2Header").addEventListener("click", ()=> saveColumn(2));
   $("col3Header").addEventListener("click", ()=> saveColumn(3));
@@ -761,11 +775,14 @@ $("btnSave").addEventListener("click", saveWorkout);
 
 /* Init */
 (async function(){ 
+  console.log("🚀 Инициализация приложения...");
   await loadDB(); 
   await loadExercisesFromJSON(); // Ждем загрузки упражнений
   seedIfEmpty(); 
+  console.log(`📊 После инициализации: ${DB.measurements.length} замеров в памяти`);
   // Не сохраняем демо-данные автоматически - только при пользовательском вводе
   syncUserUI(); 
+  console.log("✅ Приложение готово");
 })();
 </script>
 </body>
