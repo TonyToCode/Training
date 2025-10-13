@@ -514,15 +514,6 @@ function renderHistory(){
     <div id="col4Header"><input id="date4" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
     <div id="col5Header"><input id="date5" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
   `;
-  // Если нет данных из Firebase, показываем пустую таблицу
-  if (DB.measurements.length === 0) {
-    const emptyMessage = document.createElement("div");
-    emptyMessage.className = "empty";
-    emptyMessage.textContent = "Нет сохраненных замеров. Введите данные и нажмите 'Сохранить'.";
-    area.appendChild(emptyMessage);
-    return;
-  }
-
   // Ряды с названиями замеров и input полями в колонках
   measurementsList.forEach(measure=>{
     const row=document.createElement("div"); row.className="history-row";
