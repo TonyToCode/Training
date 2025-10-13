@@ -538,6 +538,42 @@ function renderHistory(){
     table.appendChild(row);
   });
   area.appendChild(table);
+  // Если нет данных из Firebase, показываем пустую таблицу
+  if (DB.measurements.length === 0) {
+    console.log("📋 Нет данных в DB.measurements - показываем пустую таблицу");
+    const emptyMessage = document.createElement("div");
+    emptyMessage.className = "empty";
+    emptyMessage.textContent = "Нет сохраненных замеров. Введите данные и нажмите 'Сохранить'.";
+    area.appendChild(emptyMessage);
+    return;
+  }
+
+  // Заполняем таблицу данными из DB.measurements
+  console.log(`📊 Заполняем таблицу ${DB.measurements.length} замерами из Firebase`);
+  DB.measurements.forEach((measurement, index) => {
+    console.log(`📅 Замер ${index + 1}:`, measurement);
+
+    // Определяем колонку для этого замера (начинаем с колонки 2)
+    const colIndex = index + 2;
+
+    // Проверяем, существует ли колонка
+    const dateInput = $(`date${colIndex}`);
+    if (dateInput) {
+      dateInput.value = measurement.date;
+      console.log(`   ✅ Установлена дата колонки ${colIndex}: ${measurement.date}`);
+
+      // Заполняем значения замеров
+      measurementsList.forEach(measure => {
+        const input = $(`input${measure.key}_${colIndex}`);
+        if (input && measurement[measure.key] !== undefined) {
+          input.value = measurement[measure.key];
+          console.log(`   ✅ ${measure.label} колонки ${colIndex}: ${measurement[measure.key]}`);
+        }
+      });
+    } else {
+      console.log(`   ❌ Колонка ${colIndex} не найдена в DOM`);
+    }
+  });
   // Кнопка Сохранить
   const saveButton = document.createElement("button");
   saveButton.className = "btn";
