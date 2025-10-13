@@ -6,24 +6,24 @@
   <title>Трекер тренировок — фронтенд v2</title>
   <script type="module">
     // Import the functions you need from the SDKs you need
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
-    import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
-
-    // TODO: Add SDKs for Firebase products that you want to use
-    // https://firebase.google.com/docs/web/setup#available-libraries
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
+    import { getAnalytics } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js';
+    import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
 
     // Your web app's Firebase configuration
     const firebaseConfig = {
-      apiKey: "your-api-key",
-      authDomain: "your-project.firebaseapp.com",
-      projectId: "your-project-id",
-      storageBucket: "your-project.appspot.com",
-      messagingSenderId: "123456789",
-      appId: "your-app-id"
+      apiKey: "AIzaSyBWCJ9LnW8etrHHutf0-VSzmqsdmrOiEt4",
+      authDomain: "training-50f1c.firebaseapp.com",
+      projectId: "training-50f1c",
+      storageBucket: "training-50f1c.firebasestorage.app",
+      messagingSenderId: "776443693745",
+      appId: "1:776443693745:web:e3244e8d7ad0ef9ac97090",
+      measurementId: "G-P40RSFC6PZ"
     };
 
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
     const db = getFirestore(app);
 
     // Make db available globally
