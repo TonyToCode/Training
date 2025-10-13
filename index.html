@@ -274,6 +274,7 @@ function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("sho
 /* DB */
 let DB = { user:{name:"Антон", theme:"dark"}, exercises:[], workouts:[], measurements:[] };
 let loadedMeasurements = []; // Для отслеживания загруженных данных
+let measurementsList = []; // Глобальная переменная для списка замеров
 
 async function loadDB(){
   console.log("🔄 Загрузка данных из Firebase...");
@@ -291,18 +292,8 @@ async function loadDB(){
   }catch(e){
     console.error("❌ Ошибка загрузки из Firebase:", e);
     toast("Ошибка загрузки из Firebase");
-    // Fallback: загружаем локальные данные
-    try{
-      const raw = localStorage.getItem("ft_front_db_v2");
-      if(raw){
-        const localDB = JSON.parse(raw);
-        DB.measurements = localDB.measurements || [];
-        loadedMeasurements = [...DB.measurements];
-        console.log(`📱 Загружено ${DB.measurements.length} локальных замеров`);
-      }
-    }catch(localError){
-      console.error("❌ Ошибка локальной загрузки:", localError);
-    }
+    DB.measurements = [];
+    loadedMeasurements = [];
   }
 }
 
@@ -378,7 +369,9 @@ function seedIfEmpty(){
   if(!DB.exercises.length){
     loadExercisesFromJSON(); // Загружаем из JSON асинхронно
   }
-  if(!DB.measurements.length){
+  // Добавляем демо-данные ТОЛЬКО если нет данных из Firebase И нет локальных данных
+  if(DB.measurements.length === 0){
+    console.log("📋 Добавляем демо-данные замеров");
     DB.measurements = [
       {
         date: "2020-10-14",
@@ -414,6 +407,7 @@ function seedIfEmpty(){
         forearm_l: 32.5
       }
     ];
+    loadedMeasurements = [...DB.measurements];
   }
 }
 
@@ -556,7 +550,9 @@ function renderHistory(){
     <div id="col5Header"><input id="date5" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
   `;
   table.appendChild(header);
-  const measurements = [
+
+  // Используем глобальную переменную measurementsList
+  measurementsList = [
     {key:"waist", label:"Талия"},
     {key:"chest_back", label:"Спина–грудь"},
     {key:"arm_r", label:"Рука правая"},
@@ -566,8 +562,9 @@ function renderHistory(){
     {key:"forearm_r", label:"Предплечье правое"},
     {key:"forearm_l", label:"Предплечье левое"}
   ];
+
   // Ряды с названиями замеров и input полями в колонках
-  measurements.forEach(measure=>{
+  measurementsList.forEach(measure=>{
     const row=document.createElement("div"); row.className="history-row";
     row.innerHTML=`
       <div>${measure.label}</div>
@@ -600,7 +597,7 @@ async function saveColumn(col){
   const newDate=$(`date${col}`).value;
   const newMeasurement={date:newDate};
   let allFilled=true;
-  measurements.forEach(m=>{
+  measurementsList.forEach(m=>{
     const val=parseFloat($(`input${m.key}_${col}`).value);
     if(isNaN(val)){ allFilled=false; } else { newMeasurement[m.key]=val; }
   });
@@ -624,7 +621,7 @@ function addNewColumn(){
   // Обновляем ряды
   const rows = document.querySelectorAll(".history-row");
   rows.forEach((row, index)=>{
-    const measure = measurements[index];
+    const measure = measurementsList[index];
     const newCell = document.createElement("div");
     newCell.innerHTML = `<input id="input${measure.key}_${newColIndex}" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>`;
     row.appendChild(newCell);
@@ -650,7 +647,7 @@ async function saveColumn(col){
   const newDate=$(`date${col}`).value;
   const newMeasurement={date:newDate};
   let allFilled=true;
-  measurements.forEach(m=>{
+  measurementsList.forEach(m=>{
     const val=parseFloat($(`input${m.key}_${col}`).value);
     if(isNaN(val)){ allFilled=false; } else { newMeasurement[m.key]=val; }
   });
@@ -668,7 +665,7 @@ async function saveMeasurements(){
   const newDate=$("date5").value;
   const newMeasurement={date:newDate};
   let allFilled=true;
-  measurements.forEach(m=>{
+  measurementsList.forEach(m=>{
     const val=parseFloat($(`input${m.key}`).value);
     if(isNaN(val)){ allFilled=false; } else { newMeasurement[m.key]=val; }
   });
