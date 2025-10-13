@@ -556,24 +556,23 @@ function renderHistory(){
 
     if (date2) {
       const newMeasurement = {date: date2};
-      let allFilled = true;
+      let hasAtLeastOneValue = false;
 
       measurementsList.forEach(m => {
         const input = $(`input${m.key}_2`);
         const val = parseFloat(input.value);
         console.log(`${m.label} (${m.key}_2): ${val} (input value: ${input.value})`);
 
-        if (isNaN(val) || val <= 0) {
-          allFilled = false;
-          console.log(`❌ ${m.label} не заполнен или некорректное значение`);
-        } else {
+        if (!isNaN(val) && val > 0) {
           newMeasurement[m.key] = val;
           console.log(`✅ ${m.label}: ${val}`);
-          hasData = true;
+          hasAtLeastOneValue = true;
+        } else {
+          console.log(`⚪ ${m.label}: пустое поле`);
         }
       });
 
-      if (allFilled && hasData) {
+      if (hasAtLeastOneValue) {
         console.log(`✅ Создан замер:`, newMeasurement);
 
         // Проверяем дубликаты
@@ -585,8 +584,8 @@ function renderHistory(){
           console.log(`⚠️ Замер с датой ${newMeasurement.date} уже существует`);
         }
       } else {
-        console.log(`❌ Не все поля заполнены или дата пустая`);
-        toast("Заполните все поля и выберите дату");
+        console.log(`❌ Ни одно поле не заполнено`);
+        toast("Заполните хотя бы одно поле");
         return;
       }
     } else {
