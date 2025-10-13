@@ -582,8 +582,8 @@ function renderHistory(){
   saveButton.textContent = "Сохранить";
   saveButton.style.marginTop = "16px";
   saveButton.addEventListener("click", async ()=>{
-    await saveDB();
-    toast("Данные сохранены в Firebase");
+    console.log("💾 Сохраняем все данные в Firebase");
+    await saveAllMeasurementsToFirebase();
   });
   area.appendChild(saveButton);
   // Слушатели для заголовков колонок
@@ -602,13 +602,32 @@ async function saveColumn(col){
     if(isNaN(val)){ allFilled=false; } else { newMeasurement[m.key]=val; }
   });
   if(!allFilled || !newDate){ toast("Заполните все поля"); return; }
+
+  // Добавляем новые данные в DB
   DB.measurements.push(newMeasurement);
-  await saveDB();
-  // Обновляем loadedMeasurements после сохранения
+
+  // Сохраняем ВСЕ данные в Firebase (не только новые)
+  console.log(`💾 Сохраняем замер ${newDate} в Firebase`);
+  await saveAllMeasurementsToFirebase();
+
+  // Обновляем локальные данные
   loadedMeasurements.push(newMeasurement);
-  saveMeasurementsToFile();
   renderHistory();
   toast("Колонка сохранена");
+}
+
+async function saveAllMeasurementsToFirebase(){
+  try{
+    for (const measurement of DB.measurements) {
+      const docRef = await firebase.firestore().collection("measurements").add(measurement);
+      console.log(`✅ Сохранен замер ${measurement.date} с ID: ${docRef.id}`);
+    }
+    toast(`Сохранено ${DB.measurements.length} замеров в Firebase`);
+  }catch(e){
+    console.error("❌ Ошибка сохранения в Firebase:", e);
+    localStorage.setItem("ft_front_db_v2", JSON.stringify(DB));
+    toast("Ошибка Firebase — данные сохранены локально");
+  }
 }
 
 function addNewColumn(){
@@ -652,11 +671,16 @@ async function saveColumn(col){
     if(isNaN(val)){ allFilled=false; } else { newMeasurement[m.key]=val; }
   });
   if(!allFilled || !newDate){ toast("Заполните все поля"); return; }
+
+  // Добавляем новые данные в DB
   DB.measurements.push(newMeasurement);
-  await saveDB();
-  // Обновляем loadedMeasurements после сохранения
+
+  // Сохраняем ВСЕ данные в Firebase (не только новые)
+  console.log(`💾 Сохраняем замер ${newDate} в Firebase`);
+  await saveAllMeasurementsToFirebase();
+
+  // Обновляем локальные данные
   loadedMeasurements.push(newMeasurement);
-  saveMeasurementsToFile();
   renderHistory();
   toast("Колонка сохранена");
 }
@@ -670,11 +694,16 @@ async function saveMeasurements(){
     if(isNaN(val)){ allFilled=false; } else { newMeasurement[m.key]=val; }
   });
   if(!allFilled){ toast("Заполните все поля"); return; }
+
+  // Добавляем новые данные в DB
   DB.measurements.push(newMeasurement);
-  await saveDB();
-  // Обновляем loadedMeasurements после сохранения
+
+  // Сохраняем ВСЕ данные в Firebase
+  console.log(`💾 Сохраняем замер ${newDate} в Firebase`);
+  await saveAllMeasurementsToFirebase();
+
+  // Обновляем локальные данные
   loadedMeasurements.push(newMeasurement);
-  saveMeasurementsToFile();
   renderHistory();
   toast("Замер добавлен");
 }
@@ -735,7 +764,7 @@ $("btnSave").addEventListener("click", saveWorkout);
   await loadDB(); 
   await loadExercisesFromJSON(); // Ждем загрузки упражнений
   seedIfEmpty(); 
-  await saveDB(); // Сохраняем обновленные данные
+  // Не сохраняем демо-данные автоматически - только при пользовательском вводе
   syncUserUI(); 
 })();
 </script>
