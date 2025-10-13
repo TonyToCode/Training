@@ -3,7 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Трекер тренировок — фронтенд v2</title>
+  <title>Трекер тренировок — фронтенд v2</title>
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+    import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "your-api-key",
+      authDomain: "your-project.firebaseapp.com",
+      projectId: "your-project-id",
+      storageBucket: "your-project.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "your-app-id"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Make db available globally
+    window.db = db;
+  </script>
 <style>
   :root{
     --bg:#0f1115;--card:#171a21;--ink:#e7eefc;--muted:#9aa3b2;--line:#232836;
@@ -243,10 +268,31 @@ function todayISO(){ return isoDateOnly(new Date()); }
 function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1200); }
 
 /* DB */
-const DB_KEY="ft_front_db_v2";
 let DB = { user:{name:"Антон", theme:"dark"}, exercises:[], workouts:[], measurements:[] };
-function loadDB(){ try{ const raw=localStorage.getItem(DB_KEY); if(raw) DB=JSON.parse(raw);}catch(e){} }
-function saveDB(){ localStorage.setItem(DB_KEY, JSON.stringify(DB)); }
+async function loadDB(){
+  try{
+    const querySnapshot = await getDocs(collection(window.db, "measurements"));
+    DB.measurements = [];
+    querySnapshot.forEach((doc) => {
+      DB.measurements.push(doc.data());
+    });
+  }catch(e){
+    console.error("Ошибка загрузки данных из Firebase:", e);
+    toast("Ошибка загрузки данных");
+  }
+}
+async function saveDB(){
+  try{
+    // Сохраняем только замеры в Firebase
+    for (const measurement of DB.measurements) {
+      await addDoc(collection(window.db, "measurements"), measurement);
+    }
+    toast("Данные сохранены в Firebase");
+  }catch(e){
+    console.error("Ошибка сохранения данных в Firebase:", e);
+    toast("Ошибка сохранения данных");
+  }
+}
 
 /* Seed demo exercises + measurements */
 async function loadExercisesFromJSON(){
@@ -424,7 +470,7 @@ $("drApply").addEventListener("click", ()=>{
 });
 
 /* Save workout */
-function saveWorkout(){
+async function saveWorkout(){
   if(!PLAN){ toast("Сначала сгенерируйте план"); return; }
   const dateISO=PLAN.dateISO||todayISO();
   const applyInc=(arr)=> arr.map(it=>{
@@ -436,7 +482,7 @@ function saveWorkout(){
     return {name:it.name, sets:it.sets, weight:(newPR ?? null)};
   });
   const rec={ date:dateISO, day:PLAN.day, mainGroup:PLAN.mainGroup, auxGroup:PLAN.auxGroup, main:applyInc(PLAN.main), aux:applyInc(PLAN.aux), cooldown:PLAN.cooldown.slice(0,2) };
-  DB.workouts.push(rec); saveDB(); setPrevWorkoutLabel(); $("btnSave").disabled=true; toast("Тренировка сохранена");
+  DB.workouts.push(rec); await saveDB(); setPrevWorkoutLabel(); $("btnSave").disabled=true; toast("Тренировка сохранена");
 }
 
 /* Add Weight overlay */
@@ -496,9 +542,9 @@ function renderHistory(){
   saveButton.className = "btn";
   saveButton.textContent = "Сохранить";
   saveButton.style.marginTop = "16px";
-  saveButton.addEventListener("click", ()=>{
-    saveDB();
-    toast("Данные сохранены локально");
+  saveButton.addEventListener("click", async ()=>{
+    await saveDB();
+    toast("Данные сохранены в Firebase");
   });
   area.appendChild(saveButton);
   // Слушатели для заголовков колонок
@@ -508,7 +554,7 @@ function renderHistory(){
   $("col5Header").addEventListener("click", ()=> saveColumn(5));
 }
 
-function saveColumn(col){
+async function saveColumn(col){
   const newDate=$(`date${col}`).value;
   const newMeasurement={date:newDate};
   let allFilled=true;
@@ -518,7 +564,7 @@ function saveColumn(col){
   });
   if(!allFilled || !newDate){ toast("Заполните все поля"); return; }
   DB.measurements.push(newMeasurement);
-  saveDB();
+  await saveDB();
   saveMeasurementsToFile();
   renderHistory();
   toast("Колонка сохранена");
@@ -556,7 +602,7 @@ function addNewColumn(){
   renderHistory();
 }
 
-function saveColumn(col){
+async function saveColumn(col){
   const newDate=$(`date${col}`).value;
   const newMeasurement={date:newDate};
   let allFilled=true;
@@ -566,13 +612,13 @@ function saveColumn(col){
   });
   if(!allFilled || !newDate){ toast("Заполните все поля"); return; }
   DB.measurements.push(newMeasurement);
-  saveDB();
+  await saveDB();
   saveMeasurementsToFile();
   renderHistory();
   toast("Колонка сохранена");
 }
 
-function saveMeasurements(){
+async function saveMeasurements(){
   const newDate=$("date5").value;
   const newMeasurement={date:newDate};
   let allFilled=true;
@@ -582,7 +628,7 @@ function saveMeasurements(){
   });
   if(!allFilled){ toast("Заполните все поля"); return; }
   DB.measurements.push(newMeasurement);
-  saveDB();
+  await saveDB();
   saveMeasurementsToFile();
   renderHistory();
   toast("Замер добавлен");
@@ -600,8 +646,13 @@ function saveMeasurementsToFile(){
   toast("Файл measurements.json скачан — сохраните его в проект вручную");
 }
 /* Settings */
-$("userName").addEventListener("blur",(e)=>{ DB.user.name=e.target.value.trim()||"Антон"; saveDB(); syncUserUI(); toast("Имя сохранено"); });
-$("themeSel").addEventListener("change",(e)=>{ DB.user.theme=e.target.value; saveDB(); syncUserUI(); toast("Тема применена"); });
+async function saveUserSettings(){
+  await saveDB();
+  toast("Настройки сохранены");
+}
+
+$("userName").addEventListener("blur",(e)=>{ DB.user.name=e.target.value.trim()||"Антон"; saveUserSettings(); syncUserUI(); });
+$("themeSel").addEventListener("change",(e)=>{ DB.user.theme=e.target.value; saveUserSettings(); syncUserUI(); });
 $("btnExport").addEventListener("click", ()=>{ const blob=new Blob([JSON.stringify(DB,null,2)], {type:"application/json"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="fitness-data.json"; a.click(); URL.revokeObjectURL(url); });
 
 /* Overlays */
@@ -636,10 +687,10 @@ $("btnSave").addEventListener("click", saveWorkout);
 
 /* Init */
 (async function(){ 
-  loadDB(); 
+  await loadDB(); 
   await loadExercisesFromJSON(); // Ждем загрузки упражнений
   seedIfEmpty(); 
-  saveDB(); // Сохраняем обновленные данные
+  await saveDB(); // Сохраняем обновленные данные
   syncUserUI(); 
 })();
 </script>
