@@ -547,13 +547,30 @@ function renderHistory(){
     console.log("💾 Сохраняем все данные в Firebase");
     console.log("📋 Перед сохранением проверяем input поля:");
 
-    // Проверяем, что в input полях есть данные
+    // Собираем данные из input полей и добавляем в DB.measurements
     let hasData = false;
     measurementsList.forEach(m => {
       const input = $(`input${m.key}_2`);
-      if (input && input.value) {
+      if (input && input.value && parseFloat(input.value) > 0) {
         console.log(`${m.label}: ${input.value}`);
         hasData = true;
+
+        // Создаем замер из данных колонки 2
+        const newDate = $(`date2`).value;
+        if (newDate) {
+          const newMeasurement = {date: newDate};
+          measurementsList.forEach(measure => {
+            const val = parseFloat($(`input${measure.key}_2`).value);
+            if (!isNaN(val)) {
+              newMeasurement[measure.key] = val;
+            }
+          });
+
+          if (!DB.measurements.some(m => m.date === newDate)) {
+            DB.measurements.push(newMeasurement);
+            console.log(`➕ Добавлен замер ${newDate} в DB.measurements`);
+          }
+        }
       }
     });
 
@@ -563,7 +580,7 @@ function renderHistory(){
       return;
     }
 
-    console.log(`📊 Данные в input полях найдены, сохраняем...`);
+    console.log(`📊 Данные собраны, сохраняем...`);
     await saveAllMeasurementsToFirebase();
   });
 
