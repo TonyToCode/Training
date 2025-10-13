@@ -545,6 +545,25 @@ function renderHistory(){
   saveButton.style.marginTop = "16px";
   saveButton.addEventListener("click", async ()=>{
     console.log("💾 Сохраняем все данные в Firebase");
+    console.log("📋 Перед сохранением проверяем input поля:");
+
+    // Проверяем, что в input полях есть данные
+    let hasData = false;
+    measurementsList.forEach(m => {
+      const input = $(`input${m.key}_2`);
+      if (input && input.value) {
+        console.log(`${m.label}: ${input.value}`);
+        hasData = true;
+      }
+    });
+
+    if (!hasData) {
+      console.log("⚠️ Нет данных в input полях");
+      toast("Заполните данные в таблице");
+      return;
+    }
+
+    console.log(`📊 Данные в input полях найдены, сохраняем...`);
     await saveAllMeasurementsToFirebase();
   });
 
@@ -557,17 +576,31 @@ function renderHistory(){
 }
 
 async function saveColumn(col){
+  console.log(`🔄 Нажата колонка ${col}, проверяем данные...`);
   const newDate=$(`date${col}`).value;
   const newMeasurement={date:newDate};
   let allFilled=true;
+
+  console.log(`📅 Дата колонки ${col}: ${newDate}`);
+
   measurementsList.forEach(m=>{
     const val=parseFloat($(`input${m.key}_${col}`).value);
+    console.log(`${m.label} (${m.key}_${col}): ${val}`);
     if(isNaN(val)){ allFilled=false; } else { newMeasurement[m.key]=val; }
   });
-  if(!allFilled || !newDate){ toast("Заполните все поля"); return; }
 
-  // Добавляем новые данные в DB
+  console.log(`✅ Данные собраны:`, newMeasurement);
+  console.log(`🔍 Все поля заполнены: ${allFilled}`);
+
+  if(!allFilled || !newDate){
+    console.log("❌ Поля не заполнены или дата пустая");
+    toast("Заполните все поля");
+    return;
+  }
+
+  console.log(`➕ Добавляем замер в DB.measurements`);
   DB.measurements.push(newMeasurement);
+  console.log(`📊 Теперь в DB.measurements: ${DB.measurements.length} замеров`);
 
   // Сохраняем ВСЕ данные в Firebase (не только новые)
   console.log(`💾 Сохраняем замер ${newDate} в Firebase`);
@@ -636,17 +669,31 @@ function addNewColumn(){
 }
 
 async function saveColumn(col){
+  console.log(`🔄 Нажата колонка ${col}, проверяем данные...`);
   const newDate=$(`date${col}`).value;
   const newMeasurement={date:newDate};
   let allFilled=true;
+
+  console.log(`📅 Дата колонки ${col}: ${newDate}`);
+
   measurementsList.forEach(m=>{
     const val=parseFloat($(`input${m.key}_${col}`).value);
+    console.log(`${m.label} (${m.key}_${col}): ${val}`);
     if(isNaN(val)){ allFilled=false; } else { newMeasurement[m.key]=val; }
   });
-  if(!allFilled || !newDate){ toast("Заполните все поля"); return; }
 
-  // Добавляем новые данные в DB
+  console.log(`✅ Данные собраны:`, newMeasurement);
+  console.log(`🔍 Все поля заполнены: ${allFilled}`);
+
+  if(!allFilled || !newDate){
+    console.log("❌ Поля не заполнены или дата пустая");
+    toast("Заполните все поля");
+    return;
+  }
+
+  console.log(`➕ Добавляем замер в DB.measurements`);
   DB.measurements.push(newMeasurement);
+  console.log(`📊 Теперь в DB.measurements: ${DB.measurements.length} замеров`);
 
   // Сохраняем ВСЕ данные в Firebase (не только новые)
   console.log(`💾 Сохраняем замер ${newDate} в Firebase`);
