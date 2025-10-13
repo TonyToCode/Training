@@ -278,10 +278,12 @@ let measurementsList = []; // Глобальная переменная для �
 
 async function loadDB(){
   console.log("🔄 Загрузка данных из Firebase...");
+  // Очищаем DB перед загрузкой
+  DB.measurements = [];
+  loadedMeasurements = [];
+
   try{
     const querySnapshot = await firebase.firestore().collection("measurements").get();
-    DB.measurements = [];
-    loadedMeasurements = [];
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       DB.measurements.push(data);
@@ -533,17 +535,6 @@ function renderHistory(){
     `;
     table.appendChild(row);
   });
-  // Заполняем таблицу существующими данными из DB.measurements
-  DB.measurements.forEach((measurement, index) => {
-    const colIndex = index + 2; // колонки начинаются с 2
-    $(`date${colIndex}`).value = measurement.date;
-    measurementsList.forEach(measure => {
-      const input = $(`input${measure.key}_${colIndex}`);
-      if (input && measurement[measure.key] !== undefined) {
-        input.value = measurement[measure.key];
-      }
-    });
-  });
   area.appendChild(table);
   // Кнопка Сохранить
   const saveButton = document.createElement("button");
@@ -732,6 +723,8 @@ $("btnSave").addEventListener("click", saveWorkout);
 /* Init */
 (async function(){ 
   console.log("🚀 Инициализация приложения...");
+  // Очищаем локальное хранилище при запуске
+  localStorage.removeItem("ft_front_db_v2");
   await loadDB(); 
   await loadExercisesFromJSON(); // Ждем загрузки упражнений
   seedIfEmpty(); 
