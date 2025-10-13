@@ -580,11 +580,21 @@ async function saveColumn(col){
 }
 
 async function saveAllMeasurementsToFirebase(){
+  console.log(`📊 Перед сохранением: ${DB.measurements.length} замеров в DB.measurements`);
+  console.log("📋 Содержимое DB.measurements:", DB.measurements);
+
+  if (DB.measurements.length === 0) {
+    console.log("⚠️ DB.measurements пустая - нет данных для сохранения");
+    toast("Нет данных для сохранения");
+    return;
+  }
+
   try{
     for (const measurement of DB.measurements) {
       const docRef = await firebase.firestore().collection("measurements").add(measurement);
       console.log(`✅ Сохранен замер ${measurement.date} с ID: ${docRef.id}`);
     }
+    console.log(`✅ Все данные сохранены в Firebase (${DB.measurements.length} замеров)`);
     toast(`Сохранено ${DB.measurements.length} замеров в Firebase`);
   }catch(e){
     console.error("❌ Ошибка сохранения в Firebase:", e);
