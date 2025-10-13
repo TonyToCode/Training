@@ -274,7 +274,16 @@ function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("sho
 /* DB */
 let DB = { user:{name:"Антон", theme:"dark"}, exercises:[], workouts:[], measurements:[] };
 let loadedMeasurements = []; // Для отслеживания загруженных данных
-let measurementsList = []; // Глобальная переменная для списка замеров
+let measurementsList = [
+  {key:"waist", label:"Талия"},
+  {key:"chest_back", label:"Спина–грудь"},
+  {key:"arm_r", label:"Рука правая"},
+  {key:"arm_l", label:"Рука левая"},
+  {key:"thigh_r", label:"Бедро правое"},
+  {key:"thigh_l", label:"Бедро левое"},
+  {key:"forearm_r", label:"Предплечье правое"},
+  {key:"forearm_l", label:"Предплечье левое"}
+];
 
 async function loadDB(){
   console.log("🔄 Загрузка данных из Firebase...");
@@ -514,6 +523,8 @@ function renderHistory(){
     <div id="col4Header"><input id="date4" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
     <div id="col5Header"><input id="date5" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
   `;
+  table.appendChild(header);
+
   // Ряды с названиями замеров и input полями в колонках
   measurementsList.forEach(measure=>{
     const row=document.createElement("div"); row.className="history-row";
