@@ -580,9 +580,9 @@ function renderHistory(){
         const isDuplicate = DB.measurements.some(m => m.date === newMeasurement.date);
         if (!isDuplicate) {
           DB.measurements.push(newMeasurement);
-          console.log(`➕ Добавлен замер ${newDate} в DB.measurements`);
+          console.log(`➕ Добавлен замер ${newMeasurement.date} в DB.measurements`);
         } else {
-          console.log(`⚠️ Замер с датой ${newDate} уже существует`);
+          console.log(`⚠️ Замер с датой ${newMeasurement.date} уже существует`);
         }
       } else {
         console.log(`❌ Не все поля заполнены или дата пустая`);
@@ -654,13 +654,31 @@ async function saveAllMeasurementsToFirebase(){
     return;
   }
 
+  // Убираем дубликаты перед сохранением
+  const uniqueMeasurements = [];
+  const seenDates = new Set();
+
+  DB.measurements.forEach(measurement => {
+    if (!seenDates.has(measurement.date)) {
+      uniqueMeasurements.push(measurement);
+      seenDates.add(measurement.date);
+    }
+  });
+
+  console.log(`📋 Убрали дубликаты, осталось ${uniqueMeasurements.length} уникальных замеров`);
+
   try{
-    for (const measurement of DB.measurements) {
+    for (const measurement of uniqueMeasurements) {
       const docRef = await firebase.firestore().collection("measurements").add(measurement);
       console.log(`✅ Сохранен замер ${measurement.date} с ID: ${docRef.id}`);
     }
-    console.log(`✅ Все данные сохранены в Firebase (${DB.measurements.length} замеров)`);
-    toast(`Сохранено ${DB.measurements.length} замеров в Firebase`);
+    console.log(`✅ Все данные сохранены в Firebase (${uniqueMeasurements.length} замеров)`);
+    toast(`Сохранено ${uniqueMeasurements.length} замеров в Firebase`);
+
+    // Очищаем DB.measurements после успешного сохранения
+    DB.measurements = [];
+    loadedMeasurements = [];
+
   }catch(e){
     console.error("❌ Ошибка сохранения в Firebase:", e);
     localStorage.setItem("ft_front_db_v2", JSON.stringify(DB));
