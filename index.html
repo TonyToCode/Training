@@ -21,11 +21,17 @@
     };
 
     // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    firebase.analytics();
+    try {
+      firebase.initializeApp(firebaseConfig);
+      firebase.analytics();
+      console.log("✅ Firebase инициализирован");
+    } catch (error) {
+      console.error("❌ Ошибка инициализации Firebase:", error);
+    }
 
     // Make db available globally
     window.db = firebase.firestore();
+    console.log("🔗 Firestore подключен:", !!window.db);
   </script>
 <style>
   :root{
@@ -270,6 +276,7 @@ let DB = { user:{name:"Антон", theme:"dark"}, exercises:[], workouts:[], me
 let loadedMeasurements = []; // Для отслеживания загруженных данных
 
 async function loadDB(){
+  console.log("🔄 Загрузка данных из Firebase...");
   try{
     const querySnapshot = await firebase.firestore().collection("measurements").get();
     DB.measurements = [];
@@ -277,12 +284,13 @@ async function loadDB(){
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       DB.measurements.push(data);
-      loadedMeasurements.push(data); // Сохраняем загруженные данные
+      loadedMeasurements.push(data);
     });
-    console.log("Загружено замеров из Firebase:", DB.measurements.length);
+    console.log(`✅ Загружено ${DB.measurements.length} замеров из Firebase`);
+    toast(`Загружено ${DB.measurements.length} замеров`);
   }catch(e){
-    console.error("Ошибка загрузки данных из Firebase:", e);
-    toast("Ошибка загрузки данных из Firebase");
+    console.error("❌ Ошибка загрузки из Firebase:", e);
+    toast("Ошибка загрузки из Firebase");
     // Fallback: загружаем локальные данные
     try{
       const raw = localStorage.getItem("ft_front_db_v2");
@@ -290,33 +298,38 @@ async function loadDB(){
         const localDB = JSON.parse(raw);
         DB.measurements = localDB.measurements || [];
         loadedMeasurements = [...DB.measurements];
-        console.log("Загружено локальных замеров:", DB.measurements.length);
+        console.log(`📱 Загружено ${DB.measurements.length} локальных замеров`);
       }
     }catch(localError){
-      console.error("Ошибка загрузки локальных данных:", localError);
+      console.error("❌ Ошибка локальной загрузки:", localError);
     }
   }
 }
 
 async function saveDB(){
+  console.log("💾 Сохранение данных в Firebase...");
+  const measurementsToSave = DB.measurements.filter(m => !loadedMeasurements.some(lm => lm.date === m.date && JSON.stringify(lm) === JSON.stringify(m)));
+  
+  if (measurementsToSave.length === 0) {
+    console.log("ℹ️ Нет новых данных для сохранения");
+    toast("Нет новых данных");
+    return;
+  }
+
+  console.log(`📤 Сохраняем ${measurementsToSave.length} новых замеров`);
+  
   try{
-    // Сохраняем только новые замеры (которые не были загружены)
-    const newMeasurements = DB.measurements.filter(m => !loadedMeasurements.some(lm => lm.date === m.date && JSON.stringify(lm) === JSON.stringify(m)));
-    
-    for (const measurement of newMeasurements) {
-      await firebase.firestore().collection("measurements").add(measurement);
-      console.log("Сохранен замер в Firebase:", measurement.date);
+    for (const measurement of measurementsToSave) {
+      const docRef = await firebase.firestore().collection("measurements").add(measurement);
+      console.log(`✅ Сохранен замер ${measurement.date} с ID: ${docRef.id}`);
     }
     
-    if (newMeasurements.length > 0) {
-      // Обновляем loadedMeasurements после успешного сохранения
-      loadedMeasurements.push(...newMeasurements);
-      toast(`Сохранено ${newMeasurements.length} новых замеров в Firebase`);
-    } else {
-      toast("Нет новых данных для сохранения");
-    }
+    // Обновляем loadedMeasurements
+    loadedMeasurements.push(...measurementsToSave);
+    console.log(`✅ Все данные сохранены в Firebase (${measurementsToSave.length} замеров)`);
+    toast(`Сохранено ${measurementsToSave.length} замеров в Firebase`);
   }catch(e){
-    console.error("Ошибка сохранения в Firebase:", e);
+    console.error("❌ Ошибка сохранения в Firebase:", e);
     // Fallback: сохраняем локально
     localStorage.setItem("ft_front_db_v2", JSON.stringify(DB));
     toast("Ошибка Firebase — данные сохранены локально");
