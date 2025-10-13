@@ -545,56 +545,58 @@ function renderHistory(){
   saveButton.style.marginTop = "16px";
   saveButton.addEventListener("click", async ()=>{
     console.log("💾 Сохраняем все данные в Firebase");
-    console.log("📋 Перед сохранением проверяем input поля:");
+    console.log("📋 Проверяем все колонки на наличие данных:");
 
-    // Собираем данные из input полей и добавляем в DB.measurements
-    let hasData = false;
+    // Проверяем все колонки (2, 3, 4, 5)
+    for (let col = 2; col <= 5; col++) {
+      const dateInput = $(`date${col}`);
+      if (!dateInput || !dateInput.value) continue;
 
-    // Проверяем колонку 2 (основная колонка)
-    const date2 = $("date2").value;
-    console.log(`📅 Дата колонки 2: ${date2}`);
-
-    if (date2) {
-      const newMeasurement = {date: date2};
+      const newMeasurement = {date: dateInput.value};
       let hasAtLeastOneValue = false;
 
       measurementsList.forEach(m => {
-        const input = $(`input${m.key}_2`);
+        const input = $(`input${m.key}_${col}`);
         const val = parseFloat(input.value);
-        console.log(`${m.label} (${m.key}_2): ${val} (input value: ${input.value})`);
 
         if (!isNaN(val) && val > 0) {
           newMeasurement[m.key] = val;
-          console.log(`✅ ${m.label}: ${val}`);
           hasAtLeastOneValue = true;
-        } else {
-          console.log(`⚪ ${m.label}: пустое поле`);
+          console.log(`✅ Колонка ${col} - ${m.label}: ${val}`);
         }
       });
 
       if (hasAtLeastOneValue) {
-        console.log(`✅ Создан замер:`, newMeasurement);
+        console.log(`✅ Создана колонка ${col}:`, newMeasurement);
 
-        // Проверяем дубликаты
-        const isDuplicate = DB.measurements.some(m => m.date === newMeasurement.date);
+        // Проверяем дубликаты - сравниваем всю комбинацию дата + значения
+        const isDuplicate = DB.measurements.some(existing => {
+          if (existing.date !== newMeasurement.date) return false;
+
+          const keys1 = Object.keys(existing).sort();
+          const keys2 = Object.keys(newMeasurement).sort();
+
+          if (keys1.length !== keys2.length) return false;
+
+          return keys1.every(key => existing[key] === newMeasurement[key]);
+        });
+
         if (!isDuplicate) {
           DB.measurements.push(newMeasurement);
-          console.log(`➕ Добавлен замер ${newMeasurement.date} в DB.measurements`);
+          console.log(`➕ Добавлена колонка ${col} с датой ${newMeasurement.date} в DB.measurements`);
         } else {
-          console.log(`⚠️ Замер с датой ${newMeasurement.date} уже существует`);
+          console.log(`⚠️ Колонка ${col} с датой ${newMeasurement.date} и такими же значениями уже существует`);
         }
-      } else {
-        console.log(`❌ Ни одно поле не заполнено`);
-        toast("Заполните хотя бы одно поле");
-        return;
       }
-    } else {
-      console.log(`❌ Дата не выбрана`);
-      toast("Выберите дату");
+    }
+
+    if (DB.measurements.length === 0) {
+      console.log("❌ Нет данных для сохранения");
+      toast("Заполните данные в таблице");
       return;
     }
 
-    console.log(`📊 Данные собраны, сохраняем...`);
+    console.log(`📊 Собрано ${DB.measurements.length} замеров, сохраняем...`);
     await saveAllMeasurementsToFirebase();
   });
 
