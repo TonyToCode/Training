@@ -600,11 +600,11 @@ function renderHistory(){
   });
 
   area.appendChild(saveButton);
-  // Слушатели для заголовков колонок
-  $("col2Header").addEventListener("click", ()=> saveColumn(2));
-  $("col3Header").addEventListener("click", ()=> saveColumn(3));
-  $("col4Header").addEventListener("click", ()=> saveColumn(4));
-  $("col5Header").addEventListener("click", ()=> saveColumn(5));
+  // Слушатели для заголовков колонок - убираем автоматическое сохранение
+  // $("col2Header").addEventListener("click", ()=> saveColumn(2));
+  // $("col3Header").addEventListener("click", ()=> saveColumn(3));
+  // $("col4Header").addEventListener("click", ()=> saveColumn(4));
+  // $("col5Header").addEventListener("click", ()=> saveColumn(5));
 }
 
 async function saveColumn(col){
