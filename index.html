@@ -550,7 +550,16 @@ function renderHistory(){
     // Проверяем все колонки (2, 3, 4, 5)
     for (let col = 2; col <= 5; col++) {
       const dateInput = $(`date${col}`);
-      if (!dateInput || !dateInput.value) continue;
+      console.log(`🔍 Проверяем колонку ${col}:`);
+      console.log(`   - dateInput элемент:`, dateInput);
+      console.log(`   - dateInput.value:`, dateInput ? dateInput.value : 'элемент не найден');
+
+      if (!dateInput || !dateInput.value) {
+        console.log(`⏭️ Колонка ${col} пропущена - нет даты`);
+        continue;
+      }
+
+      console.log(`📅 Колонка ${col} имеет дату: ${dateInput.value}`);
 
       const newMeasurement = {date: dateInput.value};
       let hasAtLeastOneValue = false;
@@ -558,11 +567,12 @@ function renderHistory(){
       measurementsList.forEach(m => {
         const input = $(`input${m.key}_${col}`);
         const val = parseFloat(input.value);
+        console.log(`   ${m.label} (${m.key}_${col}): элемент=${input ? 'найден' : 'не найден'}, значение="${input ? input.value : 'N/A'}", число=${val}`);
 
         if (!isNaN(val) && val > 0) {
           newMeasurement[m.key] = val;
           hasAtLeastOneValue = true;
-          console.log(`✅ Колонка ${col} - ${m.label}: ${val}`);
+          console.log(`   ✅ ${m.label}: ${val}`);
         }
       });
 
