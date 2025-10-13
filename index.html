@@ -4,12 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Трекер тренировок — фронтенд v2</title>
-  <script type="module">
-    // Import the functions you need from the SDKs you need
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
-    import { getAnalytics } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js';
-    import { getFirestore, collection, getDocs, addDoc } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
-
+  <!-- Firebase SDK CDN -->
+  <script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js"></script>
+  <script>
     // Your web app's Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyBWCJ9LnW8etrHHutf0-VSzmqsdmrOiEt4",
@@ -22,15 +21,11 @@
     };
 
     // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const db = getFirestore(app);
+    firebase.initializeApp(firebaseConfig);
+    firebase.analytics();
 
-    // Make db and functions available globally for the rest of the code
-    window.db = db;
-    window.getDocs = getDocs;
-    window.collection = collection;
-    window.addDoc = addDoc;
+    // Make db available globally
+    window.db = firebase.firestore();
   </script>
 <style>
   :root{
@@ -276,7 +271,7 @@ let loadedMeasurements = []; // Для отслеживания загружен
 
 async function loadDB(){
   try{
-    const querySnapshot = await getDocs(collection(window.db, "measurements"));
+    const querySnapshot = await firebase.firestore().collection("measurements").get();
     DB.measurements = [];
     loadedMeasurements = [];
     querySnapshot.forEach((doc) => {
@@ -309,7 +304,7 @@ async function saveDB(){
     const newMeasurements = DB.measurements.filter(m => !loadedMeasurements.some(lm => lm.date === m.date && JSON.stringify(lm) === JSON.stringify(m)));
     
     for (const measurement of newMeasurements) {
-      await addDoc(collection(window.db, "measurements"), measurement);
+      await firebase.firestore().collection("measurements").add(measurement);
       console.log("Сохранен замер в Firebase:", measurement.date);
     }
     
