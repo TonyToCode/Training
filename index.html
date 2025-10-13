@@ -269,28 +269,59 @@ function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("sho
 
 /* DB */
 let DB = { user:{name:"Антон", theme:"dark"}, exercises:[], workouts:[], measurements:[] };
+let loadedMeasurements = []; // Для отслеживания загруженных данных
+
 async function loadDB(){
   try{
     const querySnapshot = await getDocs(collection(window.db, "measurements"));
     DB.measurements = [];
+    loadedMeasurements = [];
     querySnapshot.forEach((doc) => {
-      DB.measurements.push(doc.data());
+      const data = doc.data();
+      DB.measurements.push(data);
+      loadedMeasurements.push(data); // Сохраняем загруженные данные
     });
+    console.log("Загружено замеров из Firebase:", DB.measurements.length);
   }catch(e){
     console.error("Ошибка загрузки данных из Firebase:", e);
-    toast("Ошибка загрузки данных");
+    toast("Ошибка загрузки данных из Firebase");
+    // Fallback: загружаем локальные данные
+    try{
+      const raw = localStorage.getItem("ft_front_db_v2");
+      if(raw){
+        const localDB = JSON.parse(raw);
+        DB.measurements = localDB.measurements || [];
+        loadedMeasurements = [...DB.measurements];
+        console.log("Загружено локальных замеров:", DB.measurements.length);
+      }
+    }catch(localError){
+      console.error("Ошибка загрузки локальных данных:", localError);
+    }
   }
 }
+
 async function saveDB(){
   try{
-    // Сохраняем только замеры в Firebase
-    for (const measurement of DB.measurements) {
+    // Сохраняем только новые замеры (которые не были загружены)
+    const newMeasurements = DB.measurements.filter(m => !loadedMeasurements.some(lm => lm.date === m.date && JSON.stringify(lm) === JSON.stringify(m)));
+    
+    for (const measurement of newMeasurements) {
       await addDoc(collection(window.db, "measurements"), measurement);
+      console.log("Сохранен замер в Firebase:", measurement.date);
     }
-    toast("Данные сохранены в Firebase");
+    
+    if (newMeasurements.length > 0) {
+      // Обновляем loadedMeasurements после успешного сохранения
+      loadedMeasurements.push(...newMeasurements);
+      toast(`Сохранено ${newMeasurements.length} новых замеров в Firebase`);
+    } else {
+      toast("Нет новых данных для сохранения");
+    }
   }catch(e){
-    console.error("Ошибка сохранения данных в Firebase:", e);
-    toast("Ошибка сохранения данных");
+    console.error("Ошибка сохранения в Firebase:", e);
+    // Fallback: сохраняем локально
+    localStorage.setItem("ft_front_db_v2", JSON.stringify(DB));
+    toast("Ошибка Firebase — данные сохранены локально");
   }
 }
 
@@ -565,6 +596,8 @@ async function saveColumn(col){
   if(!allFilled || !newDate){ toast("Заполните все поля"); return; }
   DB.measurements.push(newMeasurement);
   await saveDB();
+  // Обновляем loadedMeasurements после сохранения
+  loadedMeasurements.push(newMeasurement);
   saveMeasurementsToFile();
   renderHistory();
   toast("Колонка сохранена");
@@ -613,6 +646,8 @@ async function saveColumn(col){
   if(!allFilled || !newDate){ toast("Заполните все поля"); return; }
   DB.measurements.push(newMeasurement);
   await saveDB();
+  // Обновляем loadedMeasurements после сохранения
+  loadedMeasurements.push(newMeasurement);
   saveMeasurementsToFile();
   renderHistory();
   toast("Колонка сохранена");
@@ -629,6 +664,8 @@ async function saveMeasurements(){
   if(!allFilled){ toast("Заполните все поля"); return; }
   DB.measurements.push(newMeasurement);
   await saveDB();
+  // Обновляем loadedMeasurements после сохранения
+  loadedMeasurements.push(newMeasurement);
   saveMeasurementsToFile();
   renderHistory();
   toast("Замер добавлен");
