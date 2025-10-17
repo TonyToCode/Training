@@ -583,15 +583,6 @@ function renderHistory(){
     table.appendChild(row);
   });
   area.appendChild(table);
-  // Если нет данных из Firebase, показываем пустую таблицу
-  if (DB.measurements.length === 0) {
-    console.log("📋 Нет данных в DB.measurements - показываем пустую таблицу");
-    const emptyMessage = document.createElement("div");
-    emptyMessage.className = "empty";
-    emptyMessage.textContent = "Нет сохраненных замеров. Введите данные и нажмите 'Сохранить'.";
-    area.appendChild(emptyMessage);
-    return;
-  }
 
   // Заполняем таблицу данными из DB.measurements (фиксированная структура)
   console.log(`📊 Заполняем таблицу ${DB.measurements.length} колонками из Firebase`);
@@ -619,7 +610,8 @@ function renderHistory(){
       console.log(`   ❌ Колонка ${colIndex} не найдена в DOM или пустая дата`);
     }
   });
-  // Кнопка Сохранить
+
+  // Всегда показываем кнопку Сохранить
   const saveButton = document.createElement("button");
   saveButton.className = "btn";
   saveButton.textContent = "Сохранить";
@@ -679,58 +671,6 @@ function renderHistory(){
   // $("col3Header").addEventListener("click", ()=> saveColumn(3));
   // $("col4Header").addEventListener("click", ()=> saveColumn(4));
   // $("col5Header").addEventListener("click", ()=> saveColumn(5));
-}
-
-async function saveAllMeasurementsToFirebase(){
-  console.log(`💾 Сохраняем данные в Firebase (фиксированная структура)`);
-
-  // Собираем данные из всех колонок
-  const columnsData = {};
-  for (let col = 2; col <= 5; col++) {
-    const dateInput = $(`date${col}`);
-    if (!dateInput || !dateInput.value) {
-      columnsData[`col${col-1}`] = null;
-      continue;
-    }
-
-    const columnData = {date: dateInput.value};
-    let hasData = false;
-
-    measurementsList.forEach(m => {
-      const input = $(`input${m.key}_${col}`);
-      const val = parseFloat(input.value);
-      if (!isNaN(val) && val > 0) {
-        columnData[m.key] = val;
-        hasData = true;
-      }
-    });
-
-    columnsData[`col${col-1}`] = hasData ? columnData : null;
-  }
-
-  console.log("📋 Данные для сохранения:", columnsData);
-
-  try {
-    // Используем фиксированный userId для простоты (или DB.user.name если есть)
-    const userId = DB.user.name || "user123";
-    const docRef = firebase.firestore().collection("measurements").doc(userId);
-
-    await docRef.set({
-      ...columnsData,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-
-    console.log(`✅ Данные сохранены в Firebase для пользователя ${userId}`);
-    toast(`Данные сохранены в Firebase`);
-
-    // Очищаем локальные данные после успешного сохранения
-    DB.measurements = [];
-
-  } catch(e) {
-    console.error("❌ Ошибка сохранения в Firebase:", e);
-    localStorage.setItem("ft_front_db_v2", JSON.stringify(DB));
-    toast("Ошибка Firebase — данные сохранены локально");
-  }
 }
 
 function addNewColumn(){
