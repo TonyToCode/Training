@@ -286,25 +286,70 @@ let measurementsList = [
 ];
 
 async function loadDB(){
-  console.log("🔄 Загрузка данных из Firebase...");
-  // Очищаем DB перед загрузкой
-  DB.measurements = [];
-  loadedMeasurements = [];
+  console.log("🔄 Загрузка данных из Firebase (фиксированная структура)...");
 
-  try{
-    const querySnapshot = await firebase.firestore().collection("measurements").get();
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      DB.measurements.push(data);
-      loadedMeasurements.push(data);
-    });
-    console.log(`✅ Загружено ${DB.measurements.length} замеров из Firebase`);
-    toast(`Загружено ${DB.measurements.length} замеров`);
-  }catch(e){
+  try {
+    // Используем тот же userId, что и при сохранении
+    const userId = DB.user.name || "user123";
+    const docRef = await firebase.firestore().collection("measurements").doc(userId).get();
+
+    if (docRef.exists) {
+      const data = docRef.data();
+      console.log("📋 Данные из Firebase:", data);
+
+      // Преобразуем фиксированную структуру в массив для обратной совместимости
+      DB.measurements = [];
+      loadedMeasurements = [];
+
+      // Извлекаем данные колонок
+      for (let i = 1; i <= 4; i++) {
+        const colKey = `col${i}`;
+        const columnData = data[colKey];
+
+        if (columnData && columnData.date) {
+          DB.measurements.push(columnData);
+          loadedMeasurements.push(columnData);
+          console.log(`✅ Загружена колонка ${i}:`, columnData);
+        } else {
+          console.log(`⚪ Колонка ${i}: пустая`);
+        }
+      }
+
+      console.log(`✅ Загружено ${DB.measurements.length} колонок из Firebase`);
+      toast(`Загружено ${DB.measurements.length} колонок`);
+    } else {
+      console.log("📋 Документ не найден в Firebase - создаем пустую структуру");
+      DB.measurements = [];
+      loadedMeasurements = [];
+      toast("Нет сохраненных данных");
+    }
+
+  } catch(e) {
     console.error("❌ Ошибка загрузки из Firebase:", e);
     toast("Ошибка загрузки из Firebase");
     DB.measurements = [];
     loadedMeasurements = [];
+  }
+
+  // Создаем документ с пустой структурой если он не существует
+  if (DB.measurements.length === 0) {
+    console.log("📋 Создаем документ с пустой структурой в Firebase");
+    try {
+      const userId = DB.user.name || "user123";
+      const docRef = firebase.firestore().collection("measurements").doc(userId);
+
+      await docRef.set({
+        col1: null,
+        col2: null,
+        col3: null,
+        col4: null,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      console.log(`✅ Создан пустой документ для пользователя ${userId}`);
+    } catch(e) {
+      console.error("❌ Ошибка создания документа:", e);
+    }
   }
 }
 
@@ -548,30 +593,30 @@ function renderHistory(){
     return;
   }
 
-  // Заполняем таблицу данными из DB.measurements
-  console.log(`📊 Заполняем таблицу ${DB.measurements.length} замерами из Firebase`);
-  DB.measurements.forEach((measurement, index) => {
-    console.log(`📅 Замер ${index + 1}:`, measurement);
+  // Заполняем таблицу данными из DB.measurements (фиксированная структура)
+  console.log(`📊 Заполняем таблицу ${DB.measurements.length} колонками из Firebase`);
+  DB.measurements.forEach((columnData, index) => {
+    console.log(`📅 Колонка ${index + 1}:`, columnData);
 
-    // Определяем колонку для этого замера (начинаем с колонки 2)
+    // Определяем колонку в интерфейсе (колонка 2 соответствует col1 в данных)
     const colIndex = index + 2;
 
-    // Проверяем, существует ли колонка
+    // Проверяем, существует ли колонка в DOM
     const dateInput = $(`date${colIndex}`);
-    if (dateInput) {
-      dateInput.value = measurement.date;
-      console.log(`   ✅ Установлена дата колонки ${colIndex}: ${measurement.date}`);
+    if (dateInput && columnData.date) {
+      dateInput.value = columnData.date;
+      console.log(`   ✅ Установлена дата колонки ${colIndex}: ${columnData.date}`);
 
       // Заполняем значения замеров
       measurementsList.forEach(measure => {
         const input = $(`input${measure.key}_${colIndex}`);
-        if (input && measurement[measure.key] !== undefined) {
-          input.value = measurement[measure.key];
-          console.log(`   ✅ ${measure.label} колонки ${colIndex}: ${measurement[measure.key]}`);
+        if (input && columnData[measure.key] !== undefined) {
+          input.value = columnData[measure.key];
+          console.log(`   ✅ ${measure.label} колонки ${colIndex}: ${columnData[measure.key]}`);
         }
       });
     } else {
-      console.log(`   ❌ Колонка ${colIndex} не найдена в DOM`);
+      console.log(`   ❌ Колонка ${colIndex} не найдена в DOM или пустая дата`);
     }
   });
   // Кнопка Сохранить
@@ -580,10 +625,11 @@ function renderHistory(){
   saveButton.textContent = "Сохранить";
   saveButton.style.marginTop = "16px";
   saveButton.addEventListener("click", async ()=>{
-    console.log("💾 Сохраняем все данные в Firebase");
+    console.log("💾 Сохраняем все данные в Firebase (фиксированная структура)");
     console.log("📋 Проверяем все колонки на наличие данных:");
 
-    // Проверяем все колонки (2, 3, 4, 5)
+    // Собираем данные из всех колонок
+    const columnsData = {};
     for (let col = 2; col <= 5; col++) {
       const dateInput = $(`date${col}`);
       console.log(`🔍 Проверяем колонку ${col}:`);
@@ -591,13 +637,14 @@ function renderHistory(){
       console.log(`   - dateInput.value:`, dateInput ? dateInput.value : 'элемент не найден');
 
       if (!dateInput || !dateInput.value) {
+        columnsData[`col${col-1}`] = null;
         console.log(`⏭️ Колонка ${col} пропущена - нет даты`);
         continue;
       }
 
       console.log(`📅 Колонка ${col} имеет дату: ${dateInput.value}`);
 
-      const newMeasurement = {date: dateInput.value};
+      const columnData = {date: dateInput.value};
       let hasAtLeastOneValue = false;
 
       measurementsList.forEach(m => {
@@ -606,43 +653,23 @@ function renderHistory(){
         console.log(`   ${m.label} (${m.key}_${col}): элемент=${input ? 'найден' : 'не найден'}, значение="${input ? input.value : 'N/A'}", число=${val}`);
 
         if (!isNaN(val) && val > 0) {
-          newMeasurement[m.key] = val;
+          columnData[m.key] = val;
           hasAtLeastOneValue = true;
           console.log(`   ✅ ${m.label}: ${val}`);
         }
       });
 
-      if (hasAtLeastOneValue) {
-        console.log(`✅ Создана колонка ${col}:`, newMeasurement);
-
-        // Проверяем дубликаты - сравниваем всю комбинацию дата + значения
-        const isDuplicate = DB.measurements.some(existing => {
-          if (existing.date !== newMeasurement.date) return false;
-
-          const keys1 = Object.keys(existing).sort();
-          const keys2 = Object.keys(newMeasurement).sort();
-
-          if (keys1.length !== keys2.length) return false;
-
-          return keys1.every(key => existing[key] === newMeasurement[key]);
-        });
-
-        if (!isDuplicate) {
-          DB.measurements.push(newMeasurement);
-          console.log(`➕ Добавлена колонка ${col} с датой ${newMeasurement.date} в DB.measurements`);
-        } else {
-          console.log(`⚠️ Колонка ${col} с датой ${newMeasurement.date} и такими же значениями уже существует`);
-        }
-      }
+      columnsData[`col${col-1}`] = hasAtLeastOneValue ? columnData : null;
     }
 
-    if (DB.measurements.length === 0) {
+    console.log("📋 Данные для сохранения:", columnsData);
+
+    if (Object.values(columnsData).every(col => col === null)) {
       console.log("❌ Нет данных для сохранения");
       toast("Заполните данные в таблице");
       return;
     }
 
-    console.log(`📊 Собрано ${DB.measurements.length} замеров, сохраняем...`);
     await saveAllMeasurementsToFirebase();
   });
 
@@ -654,79 +681,52 @@ function renderHistory(){
   // $("col5Header").addEventListener("click", ()=> saveColumn(5));
 }
 
-async function saveColumn(col){
-  console.log(`🔄 Нажата колонка ${col}, проверяем данные...`);
-  const newDate=$(`date${col}`).value;
-  const newMeasurement={date:newDate};
-  let allFilled=true;
-
-  console.log(`📅 Дата колонки ${col}: ${newDate}`);
-
-  measurementsList.forEach(m=>{
-    const val=parseFloat($(`input${m.key}_${col}`).value);
-    console.log(`${m.label} (${m.key}_${col}): ${val}`);
-    if(isNaN(val)){ allFilled=false; } else { newMeasurement[m.key]=val; }
-  });
-
-  console.log(`✅ Данные собраны:`, newMeasurement);
-  console.log(`🔍 Все поля заполнены: ${allFilled}`);
-
-  if(!allFilled || !newDate){
-    console.log("❌ Поля не заполнены или дата пустая");
-    toast("Заполните все поля");
-    return;
-  }
-
-  console.log(`➕ Добавляем замер в DB.measurements`);
-  DB.measurements.push(newMeasurement);
-  console.log(`📊 Теперь в DB.measurements: ${DB.measurements.length} замеров`);
-
-  // Сохраняем ВСЕ данные в Firebase (не только новые)
-  console.log(`💾 Сохраняем замер ${newDate} в Firebase`);
-  await saveAllMeasurementsToFirebase();
-
-  // Обновляем локальные данные
-  loadedMeasurements.push(newMeasurement);
-  renderHistory();
-  toast("Колонка сохранена");
-}
-
 async function saveAllMeasurementsToFirebase(){
-  console.log(`📊 Перед сохранением: ${DB.measurements.length} замеров в DB.measurements`);
-  console.log("📋 Содержимое DB.measurements:", DB.measurements);
+  console.log(`💾 Сохраняем данные в Firebase (фиксированная структура)`);
 
-  if (DB.measurements.length === 0) {
-    console.log("⚠️ DB.measurements пустая - нет данных для сохранения");
-    toast("Нет данных для сохранения");
-    return;
+  // Собираем данные из всех колонок
+  const columnsData = {};
+  for (let col = 2; col <= 5; col++) {
+    const dateInput = $(`date${col}`);
+    if (!dateInput || !dateInput.value) {
+      columnsData[`col${col-1}`] = null;
+      continue;
+    }
+
+    const columnData = {date: dateInput.value};
+    let hasData = false;
+
+    measurementsList.forEach(m => {
+      const input = $(`input${m.key}_${col}`);
+      const val = parseFloat(input.value);
+      if (!isNaN(val) && val > 0) {
+        columnData[m.key] = val;
+        hasData = true;
+      }
+    });
+
+    columnsData[`col${col-1}`] = hasData ? columnData : null;
   }
 
-  // Убираем дубликаты перед сохранением
-  const uniqueMeasurements = [];
-  const seenDates = new Set();
+  console.log("📋 Данные для сохранения:", columnsData);
 
-  DB.measurements.forEach(measurement => {
-    if (!seenDates.has(measurement.date)) {
-      uniqueMeasurements.push(measurement);
-      seenDates.add(measurement.date);
-    }
-  });
+  try {
+    // Используем фиксированный userId для простоты (или DB.user.name если есть)
+    const userId = DB.user.name || "user123";
+    const docRef = firebase.firestore().collection("measurements").doc(userId);
 
-  console.log(`📋 Убрали дубликаты, осталось ${uniqueMeasurements.length} уникальных замеров`);
+    await docRef.set({
+      ...columnsData,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
 
-  try{
-    for (const measurement of uniqueMeasurements) {
-      const docRef = await firebase.firestore().collection("measurements").add(measurement);
-      console.log(`✅ Сохранен замер ${measurement.date} с ID: ${docRef.id}`);
-    }
-    console.log(`✅ Все данные сохранены в Firebase (${uniqueMeasurements.length} замеров)`);
-    toast(`Сохранено ${uniqueMeasurements.length} замеров в Firebase`);
+    console.log(`✅ Данные сохранены в Firebase для пользователя ${userId}`);
+    toast(`Данные сохранены в Firebase`);
 
-    // Очищаем DB.measurements после успешного сохранения
+    // Очищаем локальные данные после успешного сохранения
     DB.measurements = [];
-    loadedMeasurements = [];
 
-  }catch(e){
+  } catch(e) {
     console.error("❌ Ошибка сохранения в Firebase:", e);
     localStorage.setItem("ft_front_db_v2", JSON.stringify(DB));
     toast("Ошибка Firebase — данные сохранены локально");
@@ -749,7 +749,7 @@ function addNewColumn(){
     row.appendChild(newCell);
   });
   // Добавляем слушатель для новой колонки
-  $(`col${newColIndex}Header`).addEventListener("click", ()=> saveColumn(newColIndex));
+  // $(`col${newColIndex}Header`).addEventListener("click", ()=> saveColumn(newColIndex));
   // Добавляем новую кнопку "Добавить" после новой колонки
   const newAddColumn = document.createElement("div");
   newAddColumn.id = "addNewColumn";
@@ -763,43 +763,6 @@ function addNewColumn(){
   table.style.gridTemplateColumns = `200px repeat(${newColIndex + 1}, 150px)`;
   // Перерисовываем таблицу для обновления grid
   renderHistory();
-}
-
-async function saveColumn(col){
-  console.log(`🔄 Нажата колонка ${col}, проверяем данные...`);
-  const newDate=$(`date${col}`).value;
-  const newMeasurement={date:newDate};
-  let allFilled=true;
-
-  console.log(`📅 Дата колонки ${col}: ${newDate}`);
-
-  measurementsList.forEach(m=>{
-    const val=parseFloat($(`input${m.key}_${col}`).value);
-    console.log(`${m.label} (${m.key}_${col}): ${val}`);
-    if(isNaN(val)){ allFilled=false; } else { newMeasurement[m.key]=val; }
-  });
-
-  console.log(`✅ Данные собраны:`, newMeasurement);
-  console.log(`🔍 Все поля заполнены: ${allFilled}`);
-
-  if(!allFilled || !newDate){
-    console.log("❌ Поля не заполнены или дата пустая");
-    toast("Заполните все поля");
-    return;
-  }
-
-  console.log(`➕ Добавляем замер в DB.measurements`);
-  DB.measurements.push(newMeasurement);
-  console.log(`📊 Теперь в DB.measurements: ${DB.measurements.length} замеров`);
-
-  // Сохраняем ВСЕ данные в Firebase (не только новые)
-  console.log(`💾 Сохраняем замер ${newDate} в Firebase`);
-  await saveAllMeasurementsToFirebase();
-
-  // Обновляем локальные данные
-  loadedMeasurements.push(newMeasurement);
-  renderHistory();
-  toast("Колонка сохранена");
 }
 
 async function saveMeasurements(){
