@@ -598,6 +598,123 @@ function renderExercises(){ const g=$("exGroup").value; const q=$("exSearch").va
 $("exGroup").addEventListener("change", renderExercises);
 $("exSearch").addEventListener("input", renderExercises);
 
+function renderHistory(){
+  const area=$("measurementsArea"); area.innerHTML="";
+  // Создаем таблицу с 5 колонками
+  const table=document.createElement("div"); table.className="history-table";
+  const header=document.createElement("div"); header.className="history-header";
+  header.innerHTML=`
+    <div>Замер</div>
+    <div id="col2Header"><input id="date2" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+    <div id="col3Header"><input id="date3" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+    <div id="col4Header"><input id="date4" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+    <div id="col5Header"><input id="date5" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+  `;
+  table.appendChild(header);
+
+  // Ряды с названиями замеров и input полями в колонках
+  measurementsList.forEach(measure=>{
+    const row=document.createElement("div"); row.className="history-row";
+    row.innerHTML=`
+      <div>${measure.label}</div>
+      <div><input id="input${measure.key}_2" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+      <div><input id="input${measure.key}_3" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+      <div><input id="input${measure.key}_4" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+      <div><input id="input${measure.key}_5" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+    `;
+    table.appendChild(row);
+  });
+  area.appendChild(table);
+
+  // Заполняем таблицу данными из DB.measurements (фиксированная структура)
+  console.log(`📊 Заполняем таблицу ${DB.measurements.length} колонками из Firebase`);
+  DB.measurements.forEach((columnData, index) => {
+    console.log(`📅 Колонка ${index + 1}:`, columnData);
+
+    // Определяем колонку в интерфейсе (колонка 2 соответствует col1 в данных)
+    const colIndex = index + 2;
+
+    // Проверяем, существует ли колонка в DOM
+    const dateInput = $(`date${colIndex}`);
+    if (dateInput && columnData.date) {
+      dateInput.value = columnData.date;
+      console.log(`   ✅ Установлена дата колонки ${colIndex}: ${columnData.date}`);
+
+      // Заполняем значения замеров
+      measurementsList.forEach(measure => {
+        const input = $(`input${measure.key}_${colIndex}`);
+        if (input && columnData[measure.key] !== undefined) {
+          input.value = columnData[measure.key];
+          console.log(`   ✅ ${measure.label} колонки ${colIndex}: ${columnData[measure.key]}`);
+        }
+      });
+    } else {
+      console.log(`   ❌ Колонка ${colIndex} не найдена в DOM или пустая дата`);
+    }
+  });
+
+  // Всегда показываем кнопку Сохранить
+  const saveButton = document.createElement("button");
+  saveButton.className = "btn";
+  saveButton.textContent = "Сохранить";
+  saveButton.style.marginTop = "16px";
+  saveButton.addEventListener("click", async ()=>{
+    console.log("💾 Сохраняем все данные в Firebase (фиксированная структура)");
+    console.log("📋 Проверяем все колонки на наличие данных:");
+
+    // Собираем данные из всех колонок
+    const columnsData = {};
+    for (let col = 2; col <= 5; col++) {
+      const dateInput = $(`date${col}`);
+      console.log(`🔍 Проверяем колонку ${col}:`);
+      console.log(`   - dateInput элемент:`, dateInput);
+      console.log(`   - dateInput.value:`, dateInput ? dateInput.value : 'элемент не найден');
+
+      if (!dateInput || !dateInput.value) {
+        columnsData[`col${col-1}`] = null;
+        console.log(`⏭️ Колонка ${col} пропущена - нет даты`);
+        continue;
+      }
+
+      console.log(`📅 Колонка ${col} имеет дату: ${dateInput.value}`);
+
+      const columnData = {date: dateInput.value};
+      let hasAtLeastOneValue = false;
+
+      measurementsList.forEach(m => {
+        const input = $(`input${m.key}_${col}`);
+        const val = parseFloat(input.value);
+        console.log(`   ${m.label} (${m.key}_${col}): элемент=${input ? 'найден' : 'не найден'}, значение="${input ? input.value : 'N/A'}", число=${val}`);
+
+        if (!isNaN(val) && val > 0) {
+          columnData[m.key] = val;
+          hasAtLeastOneValue = true;
+          console.log(`   ✅ ${m.label}: ${val}`);
+        }
+      });
+
+      columnsData[`col${col-1}`] = hasAtLeastOneValue ? columnData : null;
+    }
+
+    console.log("📋 Данные для сохранения:", columnsData);
+
+    if (Object.values(columnsData).every(col => col === null)) {
+      console.log("❌ Нет данных для сохранения");
+      toast("Заполните данные в таблице");
+      return;
+    }
+
+    await saveAllMeasurementsToFirebase();
+  });
+
+  area.appendChild(saveButton);
+  // Слушатели для заголовков колонок - убираем автоматическое сохранение
+  // $("col2Header").addEventListener("click", ()=> saveColumn(2));
+  // $("col3Header").addEventListener("click", ()=> saveColumn(3));
+  // $("col4Header").addEventListener("click", ()=> saveColumn(4));
+  // $("col5Header").addEventListener("click", ()=> saveColumn(5));
+}
+
 function renderNutrition(){
   const area=$("nutritionArea"); area.innerHTML="";
   // Создаем таблицу с 5 колонками
@@ -735,6 +852,58 @@ async function saveNutritionToFirebase(nutritionColumnsData){
     console.error("❌ Ошибка сохранения данных питания в Firebase:", e);
     localStorage.setItem("ft_front_db_v2", JSON.stringify(DB));
     toast("Ошибка Firebase — данные питания сохранены локально");
+  }
+}
+
+async function saveAllMeasurementsToFirebase(){
+  console.log(`💾 Сохраняем данные в Firebase (фиксированная структура)`);
+
+  // Собираем данные из всех колонок
+  const columnsData = {};
+  for (let col = 2; col <= 5; col++) {
+    const dateInput = $(`date${col}`);
+    if (!dateInput || !dateInput.value) {
+      columnsData[`col${col-1}`] = null;
+      continue;
+    }
+
+    const columnData = {date: dateInput.value};
+    let hasData = false;
+
+    measurementsList.forEach(m => {
+      const input = $(`input${m.key}_${col}`);
+      const val = parseFloat(input.value);
+      if (!isNaN(val) && val > 0) {
+        columnData[m.key] = val;
+        hasData = true;
+      }
+    });
+
+    columnsData[`col${col-1}`] = hasData ? columnData : null;
+  }
+
+  console.log("📋 Данные для сохранения:", columnsData);
+
+  try {
+    // Используем фиксированный userId для простоты (или DB.user.name если есть)
+    const userId = DB.user.name || "user123";
+    const docRef = firebase.firestore().collection("measurements").doc(userId);
+
+    await docRef.set({
+      ...columnsData,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    console.log(`✅ Данные сохранены в Firebase для пользователя ${userId}`);
+    toast(`Данные сохранены в Firebase`);
+
+    // Очищаем локальные данные после успешного сохранения
+    DB.measurements = [];
+
+  } catch(e) {
+    console.error("❌ Ошибка сохранения в Firebase:", e);
+    localStorage.setItem("ft_front_db_v2", JSON.stringify(DB));
+    toast("Ошибка Firebase — данные сохранены локально");
   }
 }
 
