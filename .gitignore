@@ -34,6 +34,10 @@ node_modules/
 
 # dotenv environment variables file
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # IDE files
 .vscode/
@@ -57,3 +61,23 @@ Thumbs.db
 # Build directories
 dist/
 build/
+
+# Next.js
+.next/
+out/
+
+# Production
+/build
+
+# Misc
+.DS_Store
+*.tsbuildinfo
+
+# Debug
+*.log
+
+# Local env files
+.env*.local
+
+# Vercel
+.vercel

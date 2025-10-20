@@ -94,6 +94,7 @@
       <button class="btn" data-open="plan">План</button>
       <button class="btn" data-open="exercises">Упражнения</button>
       <button class="btn" data-open="measurements">История</button>
+      <button class="btn" data-open="nutrition">Питание</button>
       <button class="btn" data-open="settings">Настройки</button>
       <span class="pill">Пользователь: <b id="userLabel">—</b></span>
       <span class="pill">Тема: <b id="themeLabel">Тёмная</b></span>
@@ -223,6 +224,17 @@
   </div>
 </div>
 
+<!-- NUTRITION -->
+<div class="overlay" id="ov-nutrition" data-overlay>
+  <div class="popup card">
+    <div class="popheader">
+      <h3 style="margin:0 8px">Питание</h3>
+      <button class="x" data-close>✕</button>
+    </div>
+    <div id="nutritionArea"></div>
+  </div>
+</div>
+
 <!-- MEASUREMENTS -->
 <div class="overlay" id="ov-measurements" data-overlay>
   <div class="popup card">
@@ -272,8 +284,9 @@ function todayISO(){ return isoDateOnly(new Date()); }
 function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1200); }
 
 /* DB */
-let DB = { user:{name:"Антон", theme:"dark"}, exercises:[], workouts:[], measurements:[] };
+let DB = { user:{name:"Антон", theme:"dark"}, exercises:[], workouts:[], measurements:[], nutrition:[] };
 let loadedMeasurements = []; // Для отслеживания загруженных данных
+let loadedNutrition = []; // Для отслеживания загруженных данных питания
 let measurementsList = [
   {key:"waist", label:"Талия"},
   {key:"chest_back", label:"Спина–грудь"},
@@ -283,6 +296,11 @@ let measurementsList = [
   {key:"thigh_l", label:"Бедро левое"},
   {key:"forearm_r", label:"Предплечье правое"},
   {key:"forearm_l", label:"Предплечье левое"}
+];
+let nutritionList = [
+  {key:"calories", label:"Калории"},
+  {key:"steps", label:"Шаги"},
+  {key:"weight", label:"Вес"}
 ];
 
 async function loadDB(){
@@ -301,7 +319,7 @@ async function loadDB(){
       DB.measurements = [];
       loadedMeasurements = [];
 
-      // Извлекаем данные колонок
+      // Извлекаем данные колонок замеров
       for (let i = 1; i <= 4; i++) {
         const colKey = `col${i}`;
         const columnData = data[colKey];
@@ -309,18 +327,36 @@ async function loadDB(){
         if (columnData && columnData.date) {
           DB.measurements.push(columnData);
           loadedMeasurements.push(columnData);
-          console.log(`✅ Загружена колонка ${i}:`, columnData);
+          console.log(`✅ Загружена колонка замеров ${i}:`, columnData);
         } else {
-          console.log(`⚪ Колонка ${i}: пустая`);
+          console.log(`⚪ Колонка замеров ${i}: пустая`);
         }
       }
 
-      console.log(`✅ Загружено ${DB.measurements.length} колонок из Firebase`);
-      toast(`Загружено ${DB.measurements.length} колонок`);
+      // Извлекаем данные колонок питания (если есть)
+      DB.nutrition = [];
+      loadedNutrition = [];
+      for (let i = 1; i <= 4; i++) {
+        const colKey = `nutrition_col${i}`;
+        const columnData = data[colKey];
+
+        if (columnData && columnData.date) {
+          DB.nutrition.push(columnData);
+          loadedNutrition.push(columnData);
+          console.log(`✅ Загружена колонка питания ${i}:`, columnData);
+        } else {
+          console.log(`⚪ Колонка питания ${i}: пустая`);
+        }
+      }
+
+      console.log(`✅ Загружено ${DB.measurements.length} колонок замеров и ${DB.nutrition.length} колонок питания из Firebase`);
+      toast(`Загружено ${DB.measurements.length} замеров и ${DB.nutrition.length} записей питания`);
     } else {
       console.log("📋 Документ не найден в Firebase - создаем пустую структуру");
       DB.measurements = [];
       loadedMeasurements = [];
+      DB.nutrition = [];
+      loadedNutrition = [];
       toast("Нет сохраненных данных");
     }
 
@@ -329,10 +365,12 @@ async function loadDB(){
     toast("Ошибка загрузки из Firebase");
     DB.measurements = [];
     loadedMeasurements = [];
+    DB.nutrition = [];
+    loadedNutrition = [];
   }
 
   // Создаем документ с пустой структурой если он не существует
-  if (DB.measurements.length === 0) {
+  if (DB.measurements.length === 0 && DB.nutrition.length === 0) {
     console.log("📋 Создаем документ с пустой структурой в Firebase");
     try {
       const userId = DB.user.name || "user123";
@@ -343,6 +381,10 @@ async function loadDB(){
         col2: null,
         col3: null,
         col4: null,
+        nutrition_col1: null,
+        nutrition_col2: null,
+        nutrition_col3: null,
+        nutrition_col4: null,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
@@ -556,151 +598,122 @@ function renderExercises(){ const g=$("exGroup").value; const q=$("exSearch").va
 $("exGroup").addEventListener("change", renderExercises);
 $("exSearch").addEventListener("input", renderExercises);
 
-function renderHistory(){
-  const area=$("measurementsArea"); area.innerHTML="";
+function renderNutrition(){
+  const area=$("nutritionArea"); area.innerHTML="";
   // Создаем таблицу с 5 колонками
   const table=document.createElement("div"); table.className="history-table";
   const header=document.createElement("div"); header.className="history-header";
   header.innerHTML=`
-    <div>Замер</div>
-    <div id="col2Header"><input id="date2" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-    <div id="col3Header"><input id="date3" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-    <div id="col4Header"><input id="date4" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-    <div id="col5Header"><input id="date5" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+    <div>Показатель</div>
+    <div id="nutrition-col2Header"><input id="nutrition-date2" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+    <div id="nutrition-col3Header"><input id="nutrition-date3" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+    <div id="nutrition-col4Header"><input id="nutrition-date4" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+    <div id="nutrition-col5Header"><input id="nutrition-date5" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
   `;
   table.appendChild(header);
 
-  // Ряды с названиями замеров и input полями в колонках
-  measurementsList.forEach(measure=>{
+  // Ряды с названиями показателей питания и input полями в колонках
+  nutritionList.forEach(nutritionItem=>{
     const row=document.createElement("div"); row.className="history-row";
     row.innerHTML=`
-      <div>${measure.label}</div>
-      <div><input id="input${measure.key}_2" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-      <div><input id="input${measure.key}_3" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-      <div><input id="input${measure.key}_4" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-      <div><input id="input${measure.key}_5" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+      <div>${nutritionItem.label}</div>
+      <div><input id="input${nutritionItem.key}_2" type="number" step="${nutritionItem.key==='weight'?'0.1':'1'}" placeholder="${nutritionItem.key==='calories'?'ккал':nutritionItem.key==='steps'?'шагов':'кг'}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+      <div><input id="input${nutritionItem.key}_3" type="number" step="${nutritionItem.key==='weight'?'0.1':'1'}" placeholder="${nutritionItem.key==='calories'?'ккал':nutritionItem.key==='steps'?'шагов':'кг'}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+      <div><input id="input${nutritionItem.key}_4" type="number" step="${nutritionItem.key==='weight'?'0.1':'1'}" placeholder="${nutritionItem.key==='calories'?'ккал':nutritionItem.key==='steps'?'шагов':'кг'}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+      <div><input id="input${nutritionItem.key}_5" type="number" step="${nutritionItem.key==='weight'?'0.1':'1'}" placeholder="${nutritionItem.key==='calories'?'ккал':nutritionItem.key==='steps'?'шагов':'кг'}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
     `;
     table.appendChild(row);
   });
   area.appendChild(table);
 
-  // Заполняем таблицу данными из DB.measurements (фиксированная структура)
-  console.log(`📊 Заполняем таблицу ${DB.measurements.length} колонками из Firebase`);
-  DB.measurements.forEach((columnData, index) => {
-    console.log(`📅 Колонка ${index + 1}:`, columnData);
+  // Заполняем таблицу данными из DB.nutrition (фиксированная структура)
+  console.log(`📊 Заполняем таблицу питания ${DB.nutrition.length} колонками из Firebase`);
+  DB.nutrition.forEach((columnData, index) => {
+    console.log(`📅 Колонка питания ${index + 1}:`, columnData);
 
-    // Определяем колонку в интерфейсе (колонка 2 соответствует col1 в данных)
+    // Определяем колонку в интерфейсе (колонка 2 соответствует nutrition_col1 в данных)
     const colIndex = index + 2;
 
     // Проверяем, существует ли колонка в DOM
-    const dateInput = $(`date${colIndex}`);
+    const dateInput = $(`nutrition-date${colIndex}`);
     if (dateInput && columnData.date) {
       dateInput.value = columnData.date;
-      console.log(`   ✅ Установлена дата колонки ${colIndex}: ${columnData.date}`);
+      console.log(`   ✅ Установлена дата колонки питания ${colIndex}: ${columnData.date}`);
 
-      // Заполняем значения замеров
-      measurementsList.forEach(measure => {
-        const input = $(`input${measure.key}_${colIndex}`);
-        if (input && columnData[measure.key] !== undefined) {
-          input.value = columnData[measure.key];
-          console.log(`   ✅ ${measure.label} колонки ${colIndex}: ${columnData[measure.key]}`);
+      // Заполняем значения показателей питания
+      nutritionList.forEach(nutritionItem => {
+        const input = $(`input${nutritionItem.key}_${colIndex}`);
+        if (input && columnData[nutritionItem.key] !== undefined) {
+          input.value = columnData[nutritionItem.key];
+          console.log(`   ✅ ${nutritionItem.label} колонки питания ${colIndex}: ${columnData[nutritionItem.key]}`);
         }
       });
     } else {
-      console.log(`   ❌ Колонка ${colIndex} не найдена в DOM или пустая дата`);
+      console.log(`   ❌ Колонка питания ${colIndex} не найдена в DOM или пустая дата`);
     }
   });
 
   // Всегда показываем кнопку Сохранить
   const saveButton = document.createElement("button");
   saveButton.className = "btn";
-  saveButton.textContent = "Сохранить";
+  saveButton.textContent = "Сохранить данные питания";
   saveButton.style.marginTop = "16px";
   saveButton.addEventListener("click", async ()=>{
-    console.log("💾 Сохраняем все данные в Firebase (фиксированная структура)");
-    console.log("📋 Проверяем все колонки на наличие данных:");
+    console.log("💾 Сохраняем данные питания в Firebase (фиксированная структура)");
+    console.log("📋 Проверяем все колонки питания на наличие данных:");
 
-    // Собираем данные из всех колонок
-    const columnsData = {};
+    // Собираем данные из всех колонок питания
+    const nutritionColumnsData = {};
     for (let col = 2; col <= 5; col++) {
-      const dateInput = $(`date${col}`);
-      console.log(`🔍 Проверяем колонку ${col}:`);
+      const dateInput = $(`nutrition-date${col}`);
+      console.log(`🔍 Проверяем колонку питания ${col}:`);
       console.log(`   - dateInput элемент:`, dateInput);
       console.log(`   - dateInput.value:`, dateInput ? dateInput.value : 'элемент не найден');
 
       if (!dateInput || !dateInput.value) {
-        columnsData[`col${col-1}`] = null;
-        console.log(`⏭️ Колонка ${col} пропущена - нет даты`);
+        nutritionColumnsData[`nutrition_col${col-1}`] = null;
+        console.log(`⏭️ Колонка питания ${col} пропущена - нет даты`);
         continue;
       }
 
-      console.log(`📅 Колонка ${col} имеет дату: ${dateInput.value}`);
+      console.log(`📅 Колонка питания ${col} имеет дату: ${dateInput.value}`);
 
       const columnData = {date: dateInput.value};
       let hasAtLeastOneValue = false;
 
-      measurementsList.forEach(m => {
-        const input = $(`input${m.key}_${col}`);
+      nutritionList.forEach(n => {
+        const input = $(`input${n.key}_${col}`);
         const val = parseFloat(input.value);
-        console.log(`   ${m.label} (${m.key}_${col}): элемент=${input ? 'найден' : 'не найден'}, значение="${input ? input.value : 'N/A'}", число=${val}`);
+        console.log(`   ${n.label} (${n.key}_${col}): элемент=${input ? 'найден' : 'не найден'}, значение="${input ? input.value : 'N/A'}", число=${val}`);
 
         if (!isNaN(val) && val > 0) {
-          columnData[m.key] = val;
+          columnData[n.key] = val;
           hasAtLeastOneValue = true;
-          console.log(`   ✅ ${m.label}: ${val}`);
+          console.log(`   ✅ ${n.label}: ${val}`);
         }
       });
 
-      columnsData[`col${col-1}`] = hasAtLeastOneValue ? columnData : null;
+      nutritionColumnsData[`nutrition_col${col-1}`] = hasAtLeastOneValue ? columnData : null;
     }
 
-    console.log("📋 Данные для сохранения:", columnsData);
+    console.log("📋 Данные питания для сохранения:", nutritionColumnsData);
 
-    if (Object.values(columnsData).every(col => col === null)) {
-      console.log("❌ Нет данных для сохранения");
-      toast("Заполните данные в таблице");
+    if (Object.values(nutritionColumnsData).every(col => col === null)) {
+      console.log("❌ Нет данных питания для сохранения");
+      toast("Заполните данные в таблице питания");
       return;
     }
 
-    await saveAllMeasurementsToFirebase();
+    await saveNutritionToFirebase(nutritionColumnsData);
   });
 
   area.appendChild(saveButton);
-  // Слушатели для заголовков колонок - убираем автоматическое сохранение
-  // $("col2Header").addEventListener("click", ()=> saveColumn(2));
-  // $("col3Header").addEventListener("click", ()=> saveColumn(3));
-  // $("col4Header").addEventListener("click", ()=> saveColumn(4));
-  // $("col5Header").addEventListener("click", ()=> saveColumn(5));
 }
 
-async function saveAllMeasurementsToFirebase(){
-  console.log(`💾 Сохраняем данные в Firebase (фиксированная структура)`);
+async function saveNutritionToFirebase(nutritionColumnsData){
+  console.log(`💾 Сохраняем данные питания в Firebase (фиксированная структура)`);
 
-  // Собираем данные из всех колонок
-  const columnsData = {};
-  for (let col = 2; col <= 5; col++) {
-    const dateInput = $(`date${col}`);
-    if (!dateInput || !dateInput.value) {
-      columnsData[`col${col-1}`] = null;
-      continue;
-    }
-
-    const columnData = {date: dateInput.value};
-    let hasData = false;
-
-    measurementsList.forEach(m => {
-      const input = $(`input${m.key}_${col}`);
-      const val = parseFloat(input.value);
-      if (!isNaN(val) && val > 0) {
-        columnData[m.key] = val;
-        hasData = true;
-      }
-    });
-
-    columnsData[`col${col-1}`] = hasData ? columnData : null;
-  }
-
-  console.log("📋 Данные для сохранения:", columnsData);
+  console.log("📋 Данные питания для сохранения:", nutritionColumnsData);
 
   try {
     // Используем фиксированный userId для простоты (или DB.user.name если есть)
@@ -708,20 +721,20 @@ async function saveAllMeasurementsToFirebase(){
     const docRef = firebase.firestore().collection("measurements").doc(userId);
 
     await docRef.set({
-      ...columnsData,
+      ...nutritionColumnsData,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
 
-    console.log(`✅ Данные сохранены в Firebase для пользователя ${userId}`);
-    toast(`Данные сохранены в Firebase`);
+    console.log(`✅ Данные питания сохранены в Firebase для пользователя ${userId}`);
+    toast(`Данные питания сохранены в Firebase`);
 
     // Очищаем локальные данные после успешного сохранения
-    DB.measurements = [];
+    DB.nutrition = [];
 
   } catch(e) {
-    console.error("❌ Ошибка сохранения в Firebase:", e);
+    console.error("❌ Ошибка сохранения данных питания в Firebase:", e);
     localStorage.setItem("ft_front_db_v2", JSON.stringify(DB));
-    toast("Ошибка Firebase — данные сохранены локально");
+    toast("Ошибка Firebase — данные питания сохранены локально");
   }
 }
 
@@ -809,6 +822,7 @@ document.querySelectorAll('[data-open]').forEach(btn=>{
     if(id==="ov-exercises") renderExercises();
     if(id==="ov-plan"){ setPrevWorkoutLabel(); setInitPlanHeader(); }
     if(id==="ov-measurements") renderHistory();
+    if(id==="ov-nutrition") renderNutrition();
     if(id==="ov-history") renderHistory();
   });
 });
