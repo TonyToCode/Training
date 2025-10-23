@@ -106,6 +106,9 @@
   .btn-primary:hover{filter:brightness(0.98)}
   .input,.select{width:100%;background:var(--bg);color:var(--fg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:var(--fs-md)}
   .input::placeholder{color:var(--muted)}
+  .input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .nav-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
   .menu{display:flex;gap:8px;flex-wrap:wrap}
   .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--fg);font-size:13px}
   .muted{color:var(--muted)}
@@ -145,7 +148,16 @@
   .section-title{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-6)}
   .section-title::before{content:'';flex:1;height:1px;background:var(--border)}
   .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
-  .section-title h2{margin:0;font-size:var(--fs-h2);font-weight:700}
+  .btn-success{background:var(--ok);color:var(--accent-ink);border-color:transparent}
+  .btn-success:hover{filter:brightness(0.98)}
+  .btn-warn{background:var(--warn);color:var(--accent-ink);border-color:transparent}
+  .btn-warn:hover{filter:brightness(0.98)}
+  .btn-danger{background:var(--err);color:var(--accent-ink);border-color:transparent}
+  .btn-danger:hover{filter:brightness(0.98)}
+  .form-group{margin-bottom:var(--space-4)}
+  .form-label{font-size:var(--fs-sm);font-weight:600;color:var(--fg);margin-bottom:var(--space-2);display:block}
+  .form-error{color:var(--err);font-size:var(--fs-sm);margin-top:var(--space-1)}
+  .form-help{color:var(--muted);font-size:var(--fs-sm);margin-top:var(--space-1)}
 </style>
 </head>
 <body>
@@ -566,13 +578,33 @@ document.getElementById('themeSel').addEventListener('change', () => {
   syncUserUI();
 });
 
-document.getElementById('themeToggle').addEventListener('click', () => {
-  const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-  root.setAttribute('data-theme', next);
-  DB.user.theme = next;
-  localStorage.setItem('theme', next);
-  syncUserUI();
-});
+/* Tab Navigation */
+function initTabs(){
+  const tabs = document.querySelectorAll('.tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      // Remove active state from all tabs
+      tabs.forEach(t => {
+        t.setAttribute('aria-selected', 'false');
+        t.classList.remove('active');
+      });
+
+      // Set active state on clicked tab
+      tab.setAttribute('aria-selected', 'true');
+      tab.classList.add('active');
+
+      // Show corresponding tab content
+      const tabId = tab.getAttribute('data-tab');
+      const contents = document.querySelectorAll('.tab-content');
+      contents.forEach(content => {
+        content.classList.remove('active');
+        if(content.id === tabId) {
+          content.classList.add('active');
+        }
+      });
+    });
+  });
+}
 
 /* Plan state */
 const CYCLE={1:{main:"Ноги",aux:"Плечи"},2:{main:"Грудь",aux:"Бицепс"},3:{main:"Спина",aux:"Трицепс"}};
@@ -1122,6 +1154,8 @@ $("btnSave").addEventListener("click", saveWorkout);
   console.log(`📊 После инициализации: ${DB.measurements.length} замеров в памяти`);
   // Синхронизируем UI с данными пользователя, включая тему
   syncUserUI();
+  // Инициализируем вкладки если они есть
+  if(document.querySelector('.tab')) initTabs();
   console.log("✅ Приложение готово");
 })();
 </script>
