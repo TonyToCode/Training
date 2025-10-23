@@ -34,56 +34,97 @@
     console.log("🔗 Firestore подключен:", !!window.db);
   </script>
 <style>
-  :root{
-    --bg:#0f1115;--card:#171a21;--ink:#e7eefc;--muted:#9aa3b2;--line:#232836;
-    --acc:#22c55e;--warn:#f59e0b;--danger:#ef4444;--chip:#0d1320;--chipline:#283149;
+  :root {
+    /* Цвета — светлая тема */
+    --bg: #FFFFFF;
+    --fg: #0E1113;
+    --muted: #58606A;
+    --border: #E6E8EC;
+    --card: #F8F9FB;
+
+    --accent: #0EA5E9;   /* основной акцент (голубой) */
+    --accent-ink: #06151C;
+
+    --ok: #16A34A;
+    --warn: #F59E0B;
+    --err: #EF4444;
+
+    --radius: 12px;
+    --shadow-1: 0 1px 2px rgba(0,0,0,.06);
+    --shadow-2: 0 8px 24px rgba(0,0,0,.12);
+
+    /* Типографика */
+    --font-sans: ui-sans-serif, system-ui, -apple-system, "Inter", "Geist", "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+    --lh: 1.45;
+
+    /* Шкалы */
+    --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px; --space-5: 20px;
+    --space-6: 24px; --space-7: 32px; --space-8: 40px; --space-9: 48px;
+
+    --fs-xs: clamp(12px, 0.78vw, 13px);
+    --fs-sm: clamp(13px, 0.85vw, 14px);
+    --fs-md: clamp(14px, 0.92vw, 16px);
+    --fs-lg: clamp(18px, 1.2vw, 20px);
+    --fs-h3: clamp(20px, 1.6vw, 24px);
+    --fs-h2: clamp(22px, 2.0vw, 28px);
+    --fs-h1: clamp(26px, 3.2vw, 36px);
   }
-  [data-theme="light"]{
-    --bg:#f7f8fb;--card:#ffffff;--ink:#0f1115;--muted:#5f6b7a;--line:#e3e7ef;
-    --acc:#16a34a;--warn:#d97706;--danger:#dc2626;--chip:#eef2ff;--chipline:#c7d2fe;
+
+  :root[data-theme="dark"] {
+    --bg: #0B0C0F;
+    --fg: #EAECEF;
+    --muted: #A3A9B3;
+    --border: #1F242B;
+    --card: #13161B;
+
+    --accent: #7DD3FC;
+    --accent-ink: #0B0E12;
+
+    --shadow-1: 0 1px 2px rgba(0,0,0,.35);
+    --shadow-2: 0 10px 28px rgba(0,0,0,.45);
   }
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
-  body{background:var(--bg);color:var(--ink)}
-  header{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);z-index:40}
+  html,body{height:100%;margin:0;font-family:var(--font-sans)}
+  body{background:var(--bg);color:var(--fg)}
+  header{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--border);z-index:40}
   .wrap{max-width:1120px;margin:0 auto;padding:14px}
   h1{margin:0 0 6px;font-size:20px}
   .menu{display:flex;gap:8px;flex-wrap:wrap}
-  .btn{background:transparent;border:1px solid var(--line);color:var(--ink);padding:9px 12px;border-radius:10px;cursor:pointer}
+  .btn{background:transparent;border:1px solid var(--border);color:var(--fg);padding:9px 12px;border-radius:var(--radius);cursor:pointer}
   .btn:hover{border-color:#94a3b8}
   .btn[disabled]{opacity:.5;cursor:not-allowed}
-  .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink);font-size:13px}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--fg);font-size:13px}
   .muted{color:var(--muted)}
-  .tag{font-size:12px;color:var(--ink);background:var(--chip);border:1px solid var(--chipline);padding:2px 6px;border-radius:6px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+  .tag{font-size:12px;color:var(--fg);background:var(--accent);border:1px solid var(--accent);padding:2px 6px;border-radius:6px;color:var(--accent-ink)}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px}
   .list{display:flex;flex-direction:column;gap:8px}
-  .item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--card);background:color-mix(in srgb, var(--card) 90%, #000 10%)}
+  .item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--card);background:color-mix(in srgb, var(--card) 90%, #000 10%)}
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .grow{flex:1}
-  input{background:transparent;border:1px solid var(--line);border-radius:10px;padding:9px 10px;color:var(--ink)}
+  input{background:transparent;border:1px solid var(--border);border-radius:10px;padding:9px 10px;color:var(--fg)}
   input[type="date"]{padding:7px 10px}
-  select{font-size:14px;border:1px solid var(--line);border-radius:8px;padding:8px 12px;background:var(--card);color:var(--ink);cursor:pointer;min-width:120px;transition:border-color 0.2s}
-  select:hover{border-color:var(--acc);background:color-mix(in srgb, var(--card) 95%, var(--acc) 5%)}
-  select:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 2px color-mix(in srgb, var(--acc) 20%, transparent)}
+  select{font-size:14px;border:1px solid var(--border);border-radius:8px;padding:8px 12px;background:var(--card);color:var(--fg);cursor:pointer;min-width:120px;transition:border-color 0.2s}
+  select:hover{border-color:var(--accent);background:color-mix(in srgb, var(--card) 95%, var(--accent) 5%)}
+  select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent)}
   .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.35);z-index:50}
   .overlay.open{display:flex}
   .popup{width:min(1020px,100% - 20px);max-height:86vh;overflow:auto}
-  .popheader{position:sticky;top:0;background:var(--card);padding-bottom:8px;margin:-12px -12px 12px -12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;border-radius:14px 14px 0 0}
-  .x{border:1px solid var(--line);background:transparent;border-radius:10px;padding:6px 10px;cursor:pointer}
+  .popheader{position:sticky;top:0;background:var(--card);padding-bottom:8px;margin:-12px -12px 12px -12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;border-radius:var(--radius) var(--radius) 0 0}
+  .x{border:1px solid var(--border);background:transparent;border-radius:10px;padding:6px 10px;cursor:pointer}
   .drawer{position:fixed;inset:0;display:none;justify-content:flex-end;align-items:stretch;background:rgba(0,0,0,.35);z-index:60}
   .drawer.open{display:flex}
-  .panel{width:min(520px,100%);background:var(--card);border-left:1px solid var(--line);padding:12px;overflow:auto}
-  .sticky{position:sticky;bottom:0;background:color-mix(in srgb, var(--card) 80%, transparent);backdrop-filter:blur(4px);margin:-12px;border-radius:0 0 14px 14px;padding:10px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end}
-  .empty{border:1px dashed var(--line);border-radius:12px;padding:16px;text-align:center;color:var(--muted)}
-  .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;opacity:0;transition:opacity .2s;z-index:80}
+  .panel{width:min(520px,100%);background:var(--card);border-left:1px solid var(--border);padding:12px;overflow:auto}
+  .sticky{position:sticky;bottom:0;background:color-mix(in srgb, var(--card) 80%, transparent);backdrop-filter:blur(4px);margin:-12px;border-radius:0 0 var(--radius) var(--radius);padding:10px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+  .empty{border:1px dashed var(--border);border-radius:var(--radius);padding:16px;text-align:center;color:var(--muted)}
+  .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:var(--card);color:var(--fg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;opacity:0;transition:opacity .2s;z-index:80}
   .toast.show{opacity:1}
   .history-table{display:grid;grid-template-columns:200px repeat(4, 150px);gap:8px;margin-bottom:16px;align-items:center}
-  .history-header{font-weight:600;padding:8px;border-bottom:1px solid var(--line);display:contents}
+  .history-header{font-weight:600;padding:8px;border-bottom:1px solid var(--border);display:contents}
   .history-header > div{text-align:center}
   .history-row{display:contents}
-  .history-row > div{padding:6px;text-align:center;border:1px solid var(--line);background:var(--card)}
+  .history-row > div{padding:6px;text-align:center;border:1px solid var(--border);background:var(--card)}
   #addColumn{cursor:pointer;color:var(--accent)}
-  .history-form{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:16px}
+  .history-form{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-top:16px}
 </style>
 </head>
 <body>
@@ -605,10 +646,10 @@ function renderHistory(){
   const header=document.createElement("div"); header.className="history-header";
   header.innerHTML=`
     <div>Замер</div>
-    <div id="col2Header"><input id="date2" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-    <div id="col3Header"><input id="date3" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-    <div id="col4Header"><input id="date4" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-    <div id="col5Header"><input id="date5" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+    <div id="col2Header"><input id="date2" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+    <div id="col3Header"><input id="date3" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+    <div id="col4Header"><input id="date4" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+    <div id="col5Header"><input id="date5" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
   `;
   table.appendChild(header);
 
@@ -617,10 +658,10 @@ function renderHistory(){
     const row=document.createElement("div"); row.className="history-row";
     row.innerHTML=`
       <div>${measure.label}</div>
-      <div><input id="input${measure.key}_2" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-      <div><input id="input${measure.key}_3" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-      <div><input id="input${measure.key}_4" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-      <div><input id="input${measure.key}_5" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+      <div><input id="input${measure.key}_2" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+      <div><input id="input${measure.key}_3" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+      <div><input id="input${measure.key}_4" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+      <div><input id="input${measure.key}_5" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
     `;
     table.appendChild(row);
   });
@@ -722,10 +763,10 @@ function renderNutrition(){
   const header=document.createElement("div"); header.className="history-header";
   header.innerHTML=`
     <div>Показатель</div>
-    <div id="nutrition-col2Header"><input id="nutrition-date2" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-    <div id="nutrition-col3Header"><input id="nutrition-date3" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-    <div id="nutrition-col4Header"><input id="nutrition-date4" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-    <div id="nutrition-col5Header"><input id="nutrition-date5" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+    <div id="nutrition-col2Header"><input id="nutrition-date2" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+    <div id="nutrition-col3Header"><input id="nutrition-date3" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+    <div id="nutrition-col4Header"><input id="nutrition-date4" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+    <div id="nutrition-col5Header"><input id="nutrition-date5" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
   `;
   table.appendChild(header);
 
@@ -734,10 +775,10 @@ function renderNutrition(){
     const row=document.createElement("div"); row.className="history-row";
     row.innerHTML=`
       <div>${nutritionItem.label}</div>
-      <div><input id="input${nutritionItem.key}_2" type="number" step="${nutritionItem.key==='weight'?'0.1':'1'}" placeholder="${nutritionItem.key==='calories'?'ккал':nutritionItem.key==='steps'?'шагов':'кг'}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-      <div><input id="input${nutritionItem.key}_3" type="number" step="${nutritionItem.key==='weight'?'0.1':'1'}" placeholder="${nutritionItem.key==='calories'?'ккал':nutritionItem.key==='steps'?'шагов':'кг'}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-      <div><input id="input${nutritionItem.key}_4" type="number" step="${nutritionItem.key==='weight'?'0.1':'1'}" placeholder="${nutritionItem.key==='calories'?'ккал':nutritionItem.key==='steps'?'шагов':'кг'}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
-      <div><input id="input${nutritionItem.key}_5" type="number" step="${nutritionItem.key==='weight'?'0.1':'1'}" placeholder="${nutritionItem.key==='calories'?'ккал':nutritionItem.key==='steps'?'шагов':'кг'}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>
+      <div><input id="input${nutritionItem.key}_2" type="number" step="${nutritionItem.key==='weight'?'0.1':'1'}" placeholder="${nutritionItem.key==='calories'?'ккал':nutritionItem.key==='steps'?'шагов':'кг'}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+      <div><input id="input${nutritionItem.key}_3" type="number" step="${nutritionItem.key==='weight'?'0.1':'1'}" placeholder="${nutritionItem.key==='calories'?'ккал':nutritionItem.key==='steps'?'шагов':'кг'}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+      <div><input id="input${nutritionItem.key}_4" type="number" step="${nutritionItem.key==='weight'?'0.1':'1'}" placeholder="${nutritionItem.key==='calories'?'ккал':nutritionItem.key==='steps'?'шагов':'кг'}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+      <div><input id="input${nutritionItem.key}_5" type="number" step="${nutritionItem.key==='weight'?'0.1':'1'}" placeholder="${nutritionItem.key==='calories'?'ккал':nutritionItem.key==='steps'?'шагов':'кг'}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
     `;
     table.appendChild(row);
   });
@@ -912,14 +953,14 @@ function addNewColumn(){
   const newColIndex = document.querySelectorAll('.history-header > div').length; // Количество колонок
   // Обновляем заголовок
   const addColumn = $("addNewColumn");
-  addColumn.innerHTML = `<input id="date${newColIndex}" type="date" value="${newDate}" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);">`;
+  addColumn.innerHTML = `<input id="date${newColIndex}" type="date" value="${newDate}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);">`;
   addColumn.id = `col${newColIndex}Header`;
   // Обновляем ряды
   const rows = document.querySelectorAll(".history-row");
   rows.forEach((row, index)=>{
     const measure = measurementsList[index];
     const newCell = document.createElement("div");
-    newCell.innerHTML = `<input id="input${measure.key}_${newColIndex}" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);"></div>`;
+    newCell.innerHTML = `<input id="input${measure.key}_${newColIndex}" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>`;
     row.appendChild(newCell);
   });
   // Добавляем слушатель для новой колонки
