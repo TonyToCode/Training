@@ -96,20 +96,24 @@
   .text{font-size:var(--fs-md)}
   .text-muted{color:var(--muted)}
   .small{font-size:var(--fs-sm);color:var(--muted)}
+  .container{max-width:1040px;margin:0 auto;padding:0 var(--space-6)}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-1);padding:var(--space-6)}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--fg);font-size:var(--fs-md);transition:transform .02s ease,background .15s ease,border-color .15s ease}
+  .btn:hover{background:rgba(127,127,127,.06)}
+  .btn:active{transform:translateY(1px)}
+  .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .btn-primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;box-shadow:var(--shadow-2)}
+  .btn-primary:hover{filter:brightness(0.98)}
+  .input,.select{width:100%;background:var(--bg);color:var(--fg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:var(--fs-md)}
+  .input::placeholder{color:var(--muted)}
   .menu{display:flex;gap:8px;flex-wrap:wrap}
-  .btn{background:transparent;border:1px solid var(--border);color:var(--fg);padding:9px 12px;border-radius:var(--radius);cursor:pointer}
-  .btn:hover{border-color:#94a3b8}
-  .btn[disabled]{opacity:.5;cursor:not-allowed}
   .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--fg);font-size:13px}
   .muted{color:var(--muted)}
   .tag{font-size:12px;color:var(--fg);background:var(--accent);border:1px solid var(--accent);padding:2px 6px;border-radius:6px;color:var(--accent-ink)}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px}
   .list{display:flex;flex-direction:column;gap:8px}
   .item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--card);background:color-mix(in srgb, var(--card) 90%, #000 10%)}
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .grow{flex:1}
-  input{background:transparent;border:1px solid var(--border);border-radius:10px;padding:9px 10px;color:var(--fg)}
-  input[type="date"]{padding:7px 10px}
   select{font-size:14px;border:1px solid var(--border);border-radius:8px;padding:8px 12px;background:var(--card);color:var(--fg);cursor:pointer;min-width:120px;transition:border-color 0.2s}
   select:hover{border-color:var(--accent);background:color-mix(in srgb, var(--card) 95%, var(--accent) 5%)}
   select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent)}
@@ -131,7 +135,17 @@
   .history-row{display:contents}
   .history-row > div{padding:6px;text-align:center;border:1px solid var(--border);background:var(--card)}
   #addColumn{cursor:pointer;color:var(--accent)}
-  .history-form{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-top:16px}
+  .nav{display:flex;gap:var(--space-2);border-bottom:1px solid var(--border);margin-bottom:var(--space-6)}
+  .nav-item{position:relative;padding:var(--space-3) var(--space-4);cursor:pointer;color:var(--muted);transition:color .15s ease}
+  .nav-item:hover{color:var(--fg)}
+  .nav-item.active{color:var(--accent);font-weight:600}
+  .nav-item.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--accent)}
+  .tab-content{display:none}
+  .tab-content.active{display:block}
+  .section-title{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-6)}
+  .section-title::before{content:'';flex:1;height:1px;background:var(--border)}
+  .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+  .section-title h2{margin:0;font-size:var(--fs-h2);font-weight:700}
 </style>
 </head>
 <body>
@@ -161,8 +175,8 @@
 <div class="overlay" id="ov-plan" data-overlay>
   <div class="popup card">
     <div class="popheader">
-      <h2 style="margin:0 8px">План</h2>
-      <button class="x" data-close>✕</button>
+      <h2>План</h2>
+      <button class="btn" data-close>✕</button>
     </div>
     <div class="row" style="margin-bottom:8px">
       <span class="pill">Предыдущее занятие: <b id="prevWorkout">—</b></span>
@@ -170,16 +184,16 @@
     <div class="card" style="margin-bottom:10px">
       <div class="row">
         <label class="pill">Дата следующего занятия
-          <input id="planDate" type="date">
+          <input id="planDate" type="date" class="input">
         </label>
         <label class="pill">Предложенный день цикла
-          <select id="daySel">
+          <select id="daySel" class="select">
             <option value="1">1 — Ноги/Плечи</option>
             <option value="2">2 — Грудь/Бицепс</option>
             <option value="3">3 — Спина/Трицепс</option>
           </select>
         </label>
-        <button class="btn" id="btnGen">Сгенерировать</button>
+        <button class="btn btn-primary" id="btnGen">Сгенерировать</button>
       </div>
     </div>
 
@@ -193,7 +207,7 @@
       <button class="btn" id="btnEditCool">Редактировать заминку</button>
       <button class="btn" id="btnAddWeight">Добавить вес</button>
       <div class="grow"></div>
-      <button class="btn" id="btnSave" disabled>Отметить тренировку</button>
+      <button class="btn btn-primary" id="btnSave" disabled>Отметить тренировку</button>
     </div>
   </div>
 </div>
@@ -202,8 +216,8 @@
 <div class="drawer" id="drawer">
   <div class="panel card">
     <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
-      <h3 id="drTitle" style="margin:0">Редактор</h3>
-      <button class="x" id="drClose">✕</button>
+      <h3 id="drTitle">Редактор</h3>
+      <button class="btn" id="drClose">✕</button>
     </div>
     <div class="row" style="margin-bottom:8px">
       <span class="pill">Группа: <b id="drGroup">—</b></span>
@@ -212,7 +226,7 @@
     </div>
     <div id="drList" class="list" style="margin-bottom:10px"></div>
     <div class="sticky">
-      <button class="btn" id="drApply">Применить</button>
+      <button class="btn btn-primary" id="drApply">Применить</button>
     </div>
   </div>
 </div>
@@ -221,20 +235,20 @@
 <div class="overlay" id="ov-add" data-overlay>
   <div class="popup card">
     <div class="popheader">
-      <h2 style="margin:0 8px">Добавить вес (PR)</h2>
-      <button class="x" data-close>✕</button>
+      <h2>Добавить вес (PR)</h2>
+      <button class="btn" data-close>✕</button>
     </div>
     <div class="list">
       <div class="item">
         <div>Группа</div>
-        <select id="awGroup">
+        <select id="awGroup" class="select">
           <option>Ноги</option><option>Грудь</option><option>Спина</option>
           <option>Плечи</option><option>Бицепс</option><option>Трицепс</option>
         </select>
       </div>
       <div class="item">
         <div>Упражнение</div>
-        <select id="awExercise"></select>
+        <select id="awExercise" class="select"></select>
       </div>
       <div class="item">
         <div class="grow">
@@ -248,7 +262,7 @@
         </div>
       </div>
       <div class="row" style="justify-content:flex-end">
-        <button class="btn" id="awApply">Применить</button>
+        <button class="btn btn-primary" id="awApply">Применить</button>
       </div>
     </div>
   </div>
@@ -258,15 +272,15 @@
 <div class="overlay" id="ov-exercises" data-overlay>
   <div class="popup card">
     <div class="popheader">
-      <h2 style="margin:0 8px">Упражнения</h2>
-      <button class="x" data-close>✕</button>
+      <h2>Упражнения</h2>
+      <button class="btn" data-close>✕</button>
     </div>
     <div class="row" style="margin-bottom:8px">
-      <select id="exGroup">
+      <select id="exGroup" class="select">
         <option>Ноги</option><option>Грудь</option><option>Спина</option>
         <option>Плечи</option><option>Бицепс</option><option>Трицепс</option>
       </select>
-      <input id="exSearch" placeholder="Поиск…">
+      <input id="exSearch" class="input" placeholder="Поиск…">
     </div>
     <div id="exList" class="list"></div>
   </div>
@@ -276,8 +290,8 @@
 <div class="overlay" id="ov-nutrition" data-overlay>
   <div class="popup card">
     <div class="popheader">
-      <h2 style="margin:0 8px">Питание</h2>
-      <button class="x" data-close>✕</button>
+      <h2>Питание</h2>
+      <button class="btn" data-close>✕</button>
     </div>
     <div id="nutritionArea"></div>
   </div>
@@ -287,8 +301,8 @@
 <div class="overlay" id="ov-measurements" data-overlay>
   <div class="popup card">
     <div class="popheader">
-      <h2 style="margin:0 8px">История</h2>
-      <button class="x" data-close>✕</button>
+      <h2>История</h2>
+      <button class="btn" data-close>✕</button>
     </div>
     <div id="measurementsArea"></div>
   </div>
@@ -298,18 +312,18 @@
 <div class="overlay" id="ov-settings" data-overlay>
   <div class="popup card">
     <div class="popheader">
-      <h2 style="margin:0 8px">Настройки</h2>
-      <button class="x" data-close>✕</button>
+      <h2>Настройки</h2>
+      <button class="btn" data-close>✕</button>
     </div>
     <div class="list">
       <div class="item">
         <div>Имя пользователя</div>
-        <input id="userName" class="grow" placeholder="Антон">
+        <input id="userName" class="input grow" placeholder="Антон">
       </div>
       <div class="item">
         <div>Тема</div>
         <div class="row">
-          <select id="themeSel">
+          <select id="themeSel" class="select">
             <option value="dark">Тёмная</option>
             <option value="light">Светлая</option>
           </select>
@@ -739,7 +753,7 @@ function renderHistory(){
 
   // Всегда показываем кнопку Сохранить
   const saveButton = document.createElement("button");
-  saveButton.className = "btn";
+  saveButton.className = "btn btn-primary";
   saveButton.textContent = "Сохранить";
   saveButton.style.marginTop = "16px";
   saveButton.addEventListener("click", async ()=>{
@@ -856,7 +870,7 @@ function renderNutrition(){
 
   // Всегда показываем кнопку Сохранить
   const saveButton = document.createElement("button");
-  saveButton.className = "btn";
+  saveButton.className = "btn btn-primary";
   saveButton.textContent = "Сохранить данные питания";
   saveButton.style.marginTop = "16px";
   saveButton.addEventListener("click", async ()=>{
