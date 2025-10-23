@@ -180,6 +180,50 @@
   <section class="card">
     <h3>Добро пожаловать</h3>
     <p class="text-muted">Трекер тренировок с данными из JSON.</p>
+
+    <!-- Tab Navigation Example -->
+    <div class="tabs" style="margin-top: var(--space-6);">
+      <button class="tab active" data-tab="tab-overview" aria-selected="true">Обзор</button>
+      <button class="tab" data-tab="tab-stats" aria-selected="false">Статистика</button>
+      <button class="tab" data-tab="tab-history" aria-selected="false">История</button>
+    </div>
+
+    <div id="tab-overview" class="tab-content active">
+      <p class="text">Основная информация о ваших тренировках и прогрессе.</p>
+      <div class="row" style="margin-top: var(--space-4);">
+        <button class="btn btn-primary" data-open="plan">📅 Создать план</button>
+        <button class="btn" data-open="measurements">📊 Добавить замеры</button>
+        <button class="btn" data-open="nutrition">🥗 Ввести питание</button>
+      </div>
+    </div>
+
+    <div id="tab-stats" class="tab-content">
+      <p class="text-muted">Статистика тренировок и достижений.</p>
+      <div class="row" style="margin-top: var(--space-4);">
+        <div class="card" style="flex: 1;">
+          <div class="text-muted small">Всего тренировок</div>
+          <div style="font-size: var(--fs-h2); font-weight: 700;">24</div>
+        </div>
+        <div class="card" style="flex: 1;">
+          <div class="text-muted small">Рекорды</div>
+          <div style="font-size: var(--fs-h2); font-weight: 700; color: var(--ok);">8</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-history" class="tab-content">
+      <p class="text-muted">История ваших последних активностей.</p>
+      <div class="list">
+        <div class="item">
+          <div><b>Присед</b><div class="small">70 кг × 4 подхода</div></div>
+          <span class="tag">Ноги</span>
+        </div>
+        <div class="item">
+          <div><b>Жим лежа</b><div class="small">60 кг × 4 подхода</div></div>
+          <span class="tag">Грудь</span>
+        </div>
+      </div>
+    </div>
   </section>
 </main>
 
@@ -329,8 +373,19 @@
     </div>
     <div class="list">
       <div class="item">
-        <div>Имя пользователя</div>
-        <input id="userName" class="input grow" placeholder="Антон">
+        <div>Профиль</div>
+        <div class="row">
+          <div class="form-group" style="flex: 1;">
+            <label class="form-label" for="userName">Имя пользователя</label>
+            <input id="userName" class="input" placeholder="Антон">
+            <div class="form-help">Ваше имя для отображения в приложении</div>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label class="form-label" for="userEmail">Email</label>
+            <input id="userEmail" type="email" class="input" placeholder="email@example.com">
+            <div class="form-help">Для уведомлений и восстановления</div>
+          </div>
+        </div>
       </div>
       <div class="item">
         <div>Тема</div>
@@ -344,7 +399,12 @@
       </div>
       <div class="item">
         <div>Данные</div>
-        <button class="btn" id="btnExport">Скачать JSON</button>
+        <div class="row">
+          <button class="btn btn-primary" id="btnExport">📁 Скачать JSON</button>
+          <button class="btn btn-success" onclick="toast('Успешно сохранено!')">✅ Сохранить</button>
+          <button class="btn btn-warn" onclick="toast('Предупреждение')">⚠️ Предупредить</button>
+          <button class="btn btn-danger" onclick="confirm('Удалить данные?') || toast('Отменено')">🗑️ Удалить</button>
+        </div>
       </div>
     </div>
   </div>
