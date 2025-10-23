@@ -89,8 +89,7 @@
   body{background:var(--bg);color:var(--fg)}
   header{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--border);z-index:40}
   .wrap{max-width:1120px;margin:0 auto;padding:14px}
-  h1{font-size:var(--fs-h1);font-weight:700;letter-spacing:.1px;margin:var(--space-7) 0 var(--space-4)}
-  h2{font-size:var(--fs-h2);font-weight:700;margin:var(--space-6) 0 var(--space-3)}
+  h1{font-size:var(--fs-h1);font-weight:700;letter-spacing:.1px;margin:var(--space-7) 0 var(--space-3)}
   h3{font-size:var(--fs-h3);font-weight:600;margin:var(--space-5) 0 var(--space-3)}
   .p-lead{font-size:var(--fs-lg);color:var(--muted);margin-bottom:var(--space-5)}
   .text{font-size:var(--fs-md)}
@@ -109,6 +108,12 @@
   .input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .nav-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:var(--space-6)}
+  .col-4{grid-column:span 4}
+  .col-6{grid-column:span 6}
+  .col-12{grid-column:1/-1}
+  @media(max-width:1024px){.col-4{grid-column:span 6}}
+  @media(max-width:640px){.col-4{grid-column:1/-1}}
   .menu{display:flex;gap:8px;flex-wrap:wrap}
   .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--fg);font-size:13px}
   .muted{color:var(--muted)}
@@ -124,7 +129,7 @@
   .overlay.open{display:flex}
   .popup{width:min(1020px,100% - 20px);max-height:86vh;overflow:auto}
   .popheader{position:sticky;top:0;background:var(--card);padding-bottom:8px;margin:-12px -12px 12px -12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;border-radius:var(--radius) var(--radius) 0 0}
-  .x{border:1px solid var(--border);background:transparent;border-radius:10px;padding:6px 10px;cursor:pointer}
+  .x{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);background:transparent;border-radius:10px;padding:6px 10px;cursor:pointer}
   .drawer{position:fixed;inset:0;display:none;justify-content:flex-end;align-items:stretch;background:rgba(0,0,0,.35);z-index:60}
   .drawer.open{display:flex}
   .panel{width:min(520px,100%);background:var(--card);border-left:1px solid var(--border);padding:12px;overflow:auto}
@@ -161,70 +166,193 @@
 </style>
 </head>
 <body>
-<header>
+<header class="header">
   <div class="wrap">
     <h1>Трекер тренировок</h1>
     <div class="menu">
-      <button class="btn" data-open="plan">План</button>
-      <button class="btn" data-open="exercises">Упражнения</button>
-      <button class="btn" data-open="measurements">История</button>
-      <button class="btn" data-open="nutrition">Питание</button>
-      <button class="btn" data-open="settings">Настройки</button>
+      <button class="btn" data-open="plan">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="none" stroke="currentColor" stroke-width="2"/>
+          <polyline points="14,2 14,8 20,8" fill="none" stroke="currentColor" stroke-width="2"/>
+          <line x1="16" y1="13" x2="8" y2="13" fill="none" stroke="currentColor" stroke-width="2"/>
+          <line x1="16" y1="17" x2="8" y2="17" fill="none" stroke="currentColor" stroke-width="2"/>
+          <polyline points="10,9 9,9 8,9" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        План
+      </button>
+      <button class="btn" data-open="exercises">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        Упражнения
+      </button>
+      <button class="btn" data-open="measurements">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M21 21V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M3 21h18" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M7 12v9" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M11 12v9" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M15 12v9" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M19 12v9" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        История
+      </button>
+      <button class="btn" data-open="nutrition">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M7 2v20" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M21 15V2v13a2 2 0 0 1-2 2H9" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        Питание
+      </button>
+      <button class="btn" data-open="settings">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        Настройки
+      </button>
       <span class="pill">Пользователь: <b id="userLabel">—</b></span>
       <span class="pill">Тема: <b id="themeLabel">Тёмная</b></span>
     </div>
   </div>
 </header>
 
-<main class="wrap">
-  <section class="card">
-    <h3>Добро пожаловать</h3>
-    <p class="text-muted">Трекер тренировок с данными из JSON.</p>
+<main class="container">
+  <div class="grid">
+    <div class="col-4">
+      <section class="card">
+        <h3>Добро пожаловать</h3>
+        <p class="text-muted">Трекер тренировок с данными из JSON.</p>
 
-    <!-- Tab Navigation Example -->
-    <div class="tabs" style="margin-top: var(--space-6);">
-      <button class="tab active" data-tab="tab-overview" aria-selected="true">Обзор</button>
-      <button class="tab" data-tab="tab-stats" aria-selected="false">Статистика</button>
-      <button class="tab" data-tab="tab-history" aria-selected="false">История</button>
+        <!-- Tab Navigation Example -->
+        <div class="tabs" style="margin-top: var(--space-6);">
+          <button class="tab active" data-tab="tab-overview" aria-selected="true">Обзор</button>
+          <button class="tab" data-tab="tab-stats" aria-selected="false">Статистика</button>
+          <button class="tab" data-tab="tab-history" aria-selected="false">История</button>
+        </div>
+
+        <div id="tab-overview" class="tab-content active">
+          <p class="text">Основная информация о ваших тренировках и прогрессе.</p>
+          <div class="row" style="margin-top: var(--space-4);">
+            <button class="btn btn-primary" data-open="plan">📅 Создать план</button>
+            <button class="btn" data-open="measurements">📊 Добавить замеры</button>
+            <button class="btn" data-open="nutrition">🥗 Ввести питание</button>
+          </div>
+        </div>
+
+        <div id="tab-stats" class="tab-content">
+          <p class="text-muted">Статистика тренировок и достижений.</p>
+          <div class="row" style="margin-top: var(--space-4);">
+            <div class="card" style="flex: 1;">
+              <div class="text-muted small">Всего тренировок</div>
+              <div style="font-size: var(--fs-h2); font-weight: 700;">24</div>
+            </div>
+            <div class="card" style="flex: 1;">
+              <div class="text-muted small">Рекорды</div>
+              <div style="font-size: var(--fs-h2); font-weight: 700; color: var(--ok);">8</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-history" class="tab-content">
+          <p class="text-muted">История ваших последних активностей.</p>
+          <div class="list">
+            <div class="item">
+              <div><b>Присед</b><div class="small">70 кг × 4 подхода</div></div>
+              <span class="tag">Ноги</span>
+            </div>
+            <div class="item">
+              <div><b>Жим лежа</b><div class="small">60 кг × 4 подхода</div></div>
+              <span class="tag">Грудь</span>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
 
-    <div id="tab-overview" class="tab-content active">
-      <p class="text">Основная информация о ваших тренировках и прогрессе.</p>
-      <div class="row" style="margin-top: var(--space-4);">
-        <button class="btn btn-primary" data-open="plan">📅 Создать план</button>
-        <button class="btn" data-open="measurements">📊 Добавить замеры</button>
-        <button class="btn" data-open="nutrition">🥗 Ввести питание</button>
-      </div>
+    <div class="col-4">
+      <section class="card">
+        <div class="section-title">
+          <h2>Быстрые действия</h2>
+        </div>
+        <div class="list">
+          <div class="item">
+            <div>
+              <svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="margin-right: 8px;">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="none" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <b>План тренировок</b>
+              <div class="small text-muted">Создайте план на сегодня</div>
+            </div>
+            <button class="btn btn-primary" data-open="plan">Создать</button>
+          </div>
+          <div class="item">
+            <div>
+              <svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="margin-right: 8px;">
+                <path d="M21 21V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14" fill="none" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <b>Замеры</b>
+              <div class="small text-muted">Обновите параметры тела</div>
+            </div>
+            <button class="btn" data-open="measurements">Добавить</button>
+          </div>
+          <div class="item">
+            <div>
+              <svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="margin-right: 8px;">
+                <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" fill="none" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <b>Питание</b>
+              <div class="small text-muted">Запишите приём пищи</div>
+            </div>
+            <button class="btn" data-open="nutrition">Ввести</button>
+          </div>
+        </div>
+      </section>
     </div>
 
-    <div id="tab-stats" class="tab-content">
-      <p class="text-muted">Статистика тренировок и достижений.</p>
-      <div class="row" style="margin-top: var(--space-4);">
-        <div class="card" style="flex: 1;">
-          <div class="text-muted small">Всего тренировок</div>
-          <div style="font-size: var(--fs-h2); font-weight: 700;">24</div>
+    <div class="col-4">
+      <section class="card">
+        <div class="section-title">
+          <h2>Прогресс</h2>
         </div>
-        <div class="card" style="flex: 1;">
-          <div class="text-muted small">Рекорды</div>
-          <div style="font-size: var(--fs-h2); font-weight: 700; color: var(--ok);">8</div>
+        <div class="list">
+          <div class="item">
+            <div>
+              <svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="margin-right: 8px; color: var(--ok);">
+                <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" fill="none" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <b>Тренд вверх</b>
+              <div class="small text-muted">+2.5 кг в жиме</div>
+            </div>
+            <span class="tag" style="background: var(--ok); color: var(--accent-ink);">+PR</span>
+          </div>
+          <div class="item">
+            <div>
+              <svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="margin-right: 8px; color: var(--warn);">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="none" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <b>Цель близко</b>
+              <div class="small text-muted">Осталось 2 кг до цели</div>
+            </div>
+            <span class="tag">Цель</span>
+          </div>
+          <div class="item">
+            <div>
+              <svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="margin-right: 8px; color: var(--err);">
+                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+                <line x1="15" y1="9" x2="9" y2="15" fill="none" stroke="currentColor" stroke-width="2"/>
+                <line x1="9" y1="9" x2="15" y2="15" fill="none" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <b>Пропуск</b>
+              <div class="small text-muted">2 дня без тренировки</div>
+            </div>
+            <span class="tag" style="background: var(--err); color: var(--accent-ink);">Пропуск</span>
+          </div>
         </div>
-      </div>
+      </section>
     </div>
-
-    <div id="tab-history" class="tab-content">
-      <p class="text-muted">История ваших последних активностей.</p>
-      <div class="list">
-        <div class="item">
-          <div><b>Присед</b><div class="small">70 кг × 4 подхода</div></div>
-          <span class="tag">Ноги</span>
-        </div>
-        <div class="item">
-          <div><b>Жим лежа</b><div class="small">60 кг × 4 подхода</div></div>
-          <span class="tag">Грудь</span>
-        </div>
-      </div>
-    </div>
-  </section>
+  </div>
 </main>
 
 <!-- PLAN -->
@@ -232,7 +360,12 @@
   <div class="popup card">
     <div class="popheader">
       <h2>План</h2>
-      <button class="btn" data-close>✕</button>
+      <button class="btn" data-close aria-label="Закрыть">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+          <line x1="6" y1="6" x2="18" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
     </div>
     <div class="row" style="margin-bottom:8px">
       <span class="pill">Предыдущее занятие: <b id="prevWorkout">—</b></span>
@@ -273,7 +406,12 @@
   <div class="panel card">
     <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
       <h3 id="drTitle">Редактор</h3>
-      <button class="btn" id="drClose">✕</button>
+      <button class="btn" id="drClose" aria-label="Закрыть">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+          <line x1="6" y1="6" x2="18" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
     </div>
     <div class="row" style="margin-bottom:8px">
       <span class="pill">Группа: <b id="drGroup">—</b></span>
@@ -292,7 +430,12 @@
   <div class="popup card">
     <div class="popheader">
       <h2>Добавить вес (PR)</h2>
-      <button class="btn" data-close>✕</button>
+      <button class="btn" data-close aria-label="Закрыть">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+          <line x1="6" y1="6" x2="18" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
     </div>
     <div class="list">
       <div class="item">
@@ -329,7 +472,12 @@
   <div class="popup card">
     <div class="popheader">
       <h2>Упражнения</h2>
-      <button class="btn" data-close>✕</button>
+      <button class="btn" data-close aria-label="Закрыть">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+          <line x1="6" y1="6" x2="18" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
     </div>
     <div class="row" style="margin-bottom:8px">
       <select id="exGroup" class="select">
@@ -347,7 +495,12 @@
   <div class="popup card">
     <div class="popheader">
       <h2>Питание</h2>
-      <button class="btn" data-close>✕</button>
+      <button class="btn" data-close aria-label="Закрыть">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+          <line x1="6" y1="6" x2="18" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
     </div>
     <div id="nutritionArea"></div>
   </div>
@@ -358,7 +511,12 @@
   <div class="popup card">
     <div class="popheader">
       <h2>История</h2>
-      <button class="btn" data-close>✕</button>
+      <button class="btn" data-close aria-label="Закрыть">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+          <line x1="6" y1="6" x2="18" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
     </div>
     <div id="measurementsArea"></div>
   </div>
@@ -369,7 +527,12 @@
   <div class="popup card">
     <div class="popheader">
       <h2>Настройки</h2>
-      <button class="btn" data-close>✕</button>
+      <button class="btn" data-close aria-label="Закрыть">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+          <line x1="6" y1="6" x2="18" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
     </div>
     <div class="list">
       <div class="item">
