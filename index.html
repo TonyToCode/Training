@@ -84,11 +84,18 @@
     --shadow-2: 0 10px 28px rgba(0,0,0,.45);
   }
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;font-family:var(--font-sans)}
+  html,body{height:100%;margin:0;font-family:var(--font-sans);line-height:var(--lh);text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+  html{background:var(--bg);color:var(--fg)}
   body{background:var(--bg);color:var(--fg)}
   header{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--border);z-index:40}
   .wrap{max-width:1120px;margin:0 auto;padding:14px}
-  h1{margin:0 0 6px;font-size:20px}
+  h1{font-size:var(--fs-h1);font-weight:700;letter-spacing:.1px;margin:var(--space-7) 0 var(--space-4)}
+  h2{font-size:var(--fs-h2);font-weight:700;margin:var(--space-6) 0 var(--space-3)}
+  h3{font-size:var(--fs-h3);font-weight:600;margin:var(--space-5) 0 var(--space-3)}
+  .p-lead{font-size:var(--fs-lg);color:var(--muted);margin-bottom:var(--space-5)}
+  .text{font-size:var(--fs-md)}
+  .text-muted{color:var(--muted)}
+  .small{font-size:var(--fs-sm);color:var(--muted)}
   .menu{display:flex;gap:8px;flex-wrap:wrap}
   .btn{background:transparent;border:1px solid var(--border);color:var(--fg);padding:9px 12px;border-radius:var(--radius);cursor:pointer}
   .btn:hover{border-color:#94a3b8}
@@ -145,8 +152,8 @@
 
 <main class="wrap">
   <section class="card">
-    <h3 style="margin:0 0 8px">Добро пожаловать</h3>
-    <p class="muted">Трекер тренировок с данными из JSON.</p>
+    <h3>Добро пожаловать</h3>
+    <p class="text-muted">Трекер тренировок с данными из JSON.</p>
   </section>
 </main>
 
@@ -154,7 +161,7 @@
 <div class="overlay" id="ov-plan" data-overlay>
   <div class="popup card">
     <div class="popheader">
-      <h3 style="margin:0 8px">План</h3>
+      <h2 style="margin:0 8px">План</h2>
       <button class="x" data-close>✕</button>
     </div>
     <div class="row" style="margin-bottom:8px">
@@ -214,7 +221,7 @@
 <div class="overlay" id="ov-add" data-overlay>
   <div class="popup card">
     <div class="popheader">
-      <h3 style="margin:0 8px">Добавить вес (PR)</h3>
+      <h2 style="margin:0 8px">Добавить вес (PR)</h2>
       <button class="x" data-close>✕</button>
     </div>
     <div class="list">
@@ -251,7 +258,7 @@
 <div class="overlay" id="ov-exercises" data-overlay>
   <div class="popup card">
     <div class="popheader">
-      <h3 style="margin:0 8px">Упражнения</h3>
+      <h2 style="margin:0 8px">Упражнения</h2>
       <button class="x" data-close>✕</button>
     </div>
     <div class="row" style="margin-bottom:8px">
@@ -269,7 +276,7 @@
 <div class="overlay" id="ov-nutrition" data-overlay>
   <div class="popup card">
     <div class="popheader">
-      <h3 style="margin:0 8px">Питание</h3>
+      <h2 style="margin:0 8px">Питание</h2>
       <button class="x" data-close>✕</button>
     </div>
     <div id="nutritionArea"></div>
@@ -280,7 +287,7 @@
 <div class="overlay" id="ov-measurements" data-overlay>
   <div class="popup card">
     <div class="popheader">
-      <h3 style="margin:0 8px">История</h3>
+      <h2 style="margin:0 8px">История</h2>
       <button class="x" data-close>✕</button>
     </div>
     <div id="measurementsArea"></div>
@@ -291,7 +298,7 @@
 <div class="overlay" id="ov-settings" data-overlay>
   <div class="popup card">
     <div class="popheader">
-      <h3 style="margin:0 8px">Настройки</h3>
+      <h2 style="margin:0 8px">Настройки</h2>
       <button class="x" data-close>✕</button>
     </div>
     <div class="list">
@@ -301,10 +308,13 @@
       </div>
       <div class="item">
         <div>Тема</div>
-        <select id="themeSel">
-          <option value="dark">Тёмная</option>
-          <option value="light">Светлая</option>
-        </select>
+        <div class="row">
+          <select id="themeSel">
+            <option value="dark">Тёмная</option>
+            <option value="light">Светлая</option>
+          </select>
+          <button class="btn" id="themeToggle" style="margin-left:8px">🔄</button>
+        </div>
       </div>
       <div class="item">
         <div>Данные</div>
@@ -514,8 +524,41 @@ function seedIfEmpty(){
 }
 
 /* Theme & User */
-function applyTheme(){ document.documentElement.setAttribute("data-theme", DB.user.theme||"dark"); $("themeLabel").textContent = DB.user.theme==="light"?"Светлая":"Тёмная"; }
-function syncUserUI(){ $("userLabel").textContent=DB.user.name||"—"; $("userName").value=DB.user.name||""; $("themeSel").value=DB.user.theme||"dark"; applyTheme(); }
+const root = document.documentElement;
+const saved = localStorage.getItem('theme');
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+root.setAttribute('data-theme', saved ?? (prefersDark ? 'dark' : 'light'));
+
+function applyTheme(){
+  const currentTheme = root.getAttribute('data-theme');
+  DB.user.theme = currentTheme;
+  localStorage.setItem('theme', currentTheme);
+  $("themeLabel").textContent = currentTheme==="light"?"Светлая":"Тёмная";
+}
+function syncUserUI(){
+  $("userLabel").textContent=DB.user.name||"—";
+  $("userName").value=DB.user.name||"";
+  const currentTheme = root.getAttribute('data-theme');
+  $("themeSel").value=currentTheme;
+  DB.user.theme = currentTheme;
+  applyTheme();
+}
+
+document.getElementById('themeSel').addEventListener('change', () => {
+  const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  root.setAttribute('data-theme', next);
+  DB.user.theme = next;
+  localStorage.setItem('theme', next);
+  syncUserUI();
+});
+
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  root.setAttribute('data-theme', next);
+  DB.user.theme = next;
+  localStorage.setItem('theme', next);
+  syncUserUI();
+});
 
 /* Plan state */
 const CYCLE={1:{main:"Ноги",aux:"Плечи"},2:{main:"Грудь",aux:"Бицепс"},3:{main:"Спина",aux:"Трицепс"}};
@@ -1056,16 +1099,15 @@ $("btnAddWeight").addEventListener("click", openAddWeight);
 $("btnSave").addEventListener("click", saveWorkout);
 
 /* Init */
-(async function(){ 
+(async function(){
   console.log("🚀 Инициализация приложения...");
-  // Очищаем локальное хранилище при запуске
-  localStorage.removeItem("ft_front_db_v2");
-  await loadDB(); 
+  // НЕ очищаем локальное хранилище при запуске, сохраняем настройки пользователя
+  await loadDB();
   await loadExercisesFromJSON(); // Ждем загрузки упражнений
-  seedIfEmpty(); 
+  seedIfEmpty();
   console.log(`📊 После инициализации: ${DB.measurements.length} замеров в памяти`);
-  // Не сохраняем демо-данные автоматически - только при пользовательском вводе
-  syncUserUI(); 
+  // Синхронизируем UI с данными пользователя, включая тему
+  syncUserUI();
   console.log("✅ Приложение готово");
 })();
 </script>
