@@ -98,22 +98,27 @@
   .container{max-width:1040px;margin:0 auto;padding:0 var(--space-6)}
   .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-1);padding:var(--space-6)}
   .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--fg);font-size:var(--fs-md);transition:transform .02s ease,background .15s ease,border-color .15s ease}
-  .btn:hover{background:rgba(127,127,127,.06)}
   .btn:active{transform:translateY(1px)}
   .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .btn-primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;box-shadow:var(--shadow-2)}
-  .btn-primary:hover{filter:brightness(0.98)}
   .input,.select{width:100%;background:var(--bg);color:var(--fg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:var(--fs-md)}
   .input::placeholder{color:var(--muted)}
   .input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .nav-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
   .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:var(--space-6)}
+  .col-3{grid-column:span 3}
   .col-4{grid-column:span 4}
   .col-6{grid-column:span 6}
   .col-12{grid-column:1/-1}
-  @media(max-width:1024px){.col-4{grid-column:span 6}}
-  @media(max-width:640px){.col-4{grid-column:1/-1}}
+  @media(max-width:1024px){
+    .col-3{grid-column:span 6}
+    .col-4{grid-column:span 6}
+  }
+  @media(max-width:640px){
+    .col-3{grid-column:1/-1}
+    .col-4{grid-column:1/-1}
+  }
   .menu{display:flex;gap:8px;flex-wrap:wrap}
   .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--fg);font-size:13px}
   .muted{color:var(--muted)}
@@ -123,7 +128,6 @@
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .grow{flex:1}
   select{font-size:14px;border:1px solid var(--border);border-radius:8px;padding:8px 12px;background:var(--card);color:var(--fg);cursor:pointer;min-width:120px;transition:border-color 0.2s}
-  select:hover{border-color:var(--accent);background:color-mix(in srgb, var(--card) 95%, var(--accent) 5%)}
   select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent)}
   .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.35);z-index:50}
   .overlay.open{display:flex}
@@ -145,7 +149,6 @@
   #addColumn{cursor:pointer;color:var(--accent)}
   .nav{display:flex;gap:var(--space-2);border-bottom:1px solid var(--border);margin-bottom:var(--space-6)}
   .nav-item{position:relative;padding:var(--space-3) var(--space-4);cursor:pointer;color:var(--muted);transition:color .15s ease}
-  .nav-item:hover{color:var(--fg)}
   .nav-item.active{color:var(--accent);font-weight:600}
   .nav-item.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--accent)}
   .tab-content{display:none}
@@ -154,11 +157,8 @@
   .section-title::before{content:'';flex:1;height:1px;background:var(--border)}
   .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
   .btn-success{background:var(--ok);color:var(--accent-ink);border-color:transparent}
-  .btn-success:hover{filter:brightness(0.98)}
   .btn-warn{background:var(--warn);color:var(--accent-ink);border-color:transparent}
-  .btn-warn:hover{filter:brightness(0.98)}
   .btn-danger{background:var(--err);color:var(--accent-ink);border-color:transparent}
-  .btn-danger:hover{filter:brightness(0.98)}
   .form-group{margin-bottom:var(--space-4)}
   .form-label{font-size:var(--fs-sm);font-weight:600;color:var(--fg);margin-bottom:var(--space-2);display:block}
   .form-error{color:var(--err);font-size:var(--fs-sm);margin-top:var(--space-1)}
@@ -220,12 +220,11 @@
 
 <main class="container">
   <div class="grid">
-    <div class="col-4">
+    <div class="col-3">
       <section class="card">
         <h3>Добро пожаловать</h3>
         <p class="text-muted">Трекер тренировок с данными из JSON.</p>
 
-        <!-- Tab Navigation Example -->
         <div class="tabs" style="margin-top: var(--space-6);">
           <button class="tab active" data-tab="tab-overview" aria-selected="true">Обзор</button>
           <button class="tab" data-tab="tab-stats" aria-selected="false">Статистика</button>
@@ -234,11 +233,6 @@
 
         <div id="tab-overview" class="tab-content active">
           <p class="text">Основная информация о ваших тренировках и прогрессе.</p>
-          <div class="row" style="margin-top: var(--space-4);">
-            <button class="btn btn-primary" data-open="plan">📅 Создать план</button>
-            <button class="btn" data-open="measurements">📊 Добавить замеры</button>
-            <button class="btn" data-open="nutrition">🥗 Ввести питание</button>
-          </div>
         </div>
 
         <div id="tab-stats" class="tab-content">
@@ -271,7 +265,7 @@
       </section>
     </div>
 
-    <div class="col-4">
+    <div class="col-6">
       <section class="card">
         <div class="section-title">
           <h2>Быстрые действия</h2>
@@ -279,9 +273,7 @@
         <div class="list">
           <div class="item">
             <div>
-              <svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="margin-right: 8px;">
-                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="none" stroke="currentColor" stroke-width="2"/>
-              </svg>
+              📅
               <b>План тренировок</b>
               <div class="small text-muted">Создайте план на сегодня</div>
             </div>
@@ -289,29 +281,25 @@
           </div>
           <div class="item">
             <div>
-              <svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="margin-right: 8px;">
-                <path d="M21 21V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14" fill="none" stroke="currentColor" stroke-width="2"/>
-              </svg>
+              📊
               <b>Замеры</b>
               <div class="small text-muted">Обновите параметры тела</div>
             </div>
-            <button class="btn" data-open="measurements">Добавить</button>
+            <button class="btn btn-primary" data-open="measurements">Добавить</button>
           </div>
           <div class="item">
             <div>
-              <svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="margin-right: 8px;">
-                <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" fill="none" stroke="currentColor" stroke-width="2"/>
-              </svg>
+              🥗
               <b>Питание</b>
               <div class="small text-muted">Запишите приём пищи</div>
             </div>
-            <button class="btn" data-open="nutrition">Ввести</button>
+            <button class="btn btn-primary" data-open="nutrition">Ввести</button>
           </div>
         </div>
       </section>
     </div>
 
-    <div class="col-4">
+    <div class="col-3">
       <section class="card">
         <div class="section-title">
           <h2>Прогресс</h2>
