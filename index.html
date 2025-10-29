@@ -2,88 +2,398 @@
 <html lang="ru" data-theme="dark">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Трекер тренировок — фронтенд v2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0EA5E9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B0C0F" media="(prefers-color-scheme: dark)">
+  <!-- Firebase SDK v8 CDN (стабильная версия с глобальными переменными) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-analytics.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script>
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBWCJ9LnW8etrHHutf0-VSzmqsdmrOiEt4",
+      authDomain: "training-50f1c.firebaseapp.com",
+      projectId: "training-50f1c",
+      storageBucket: "training-50f1c.firebasestorage.app",
+      messagingSenderId: "776443693745",
+      appId: "1:776443693745:web:e3244e8d7ad0ef9ac97090",
+      measurementId: "G-P40RSFC6PZ"
+    };
+
+    // Initialize Firebase
+    try {
+      firebase.initializeApp(firebaseConfig);
+      firebase.analytics();
+      console.log("✅ Firebase инициализирован");
+    } catch (error) {
+      console.error("❌ Ошибка инициализации Firebase:", error);
+    }
+
+    // Make db available globally
+    window.db = firebase.firestore();
+    console.log("🔗 Firestore подключен:", !!window.db);
+  </script>
 <style>
-  :root{
-    --bg:#0f1115;--card:#171a21;--ink:#e7eefc;--muted:#9aa3b2;--line:#232836;
-    --acc:#22c55e;--warn:#f59e0b;--danger:#ef4444;--chip:#0d1320;--chipline:#283149;
+  :root {
+    /* Цвета — светлая тема */
+    --bg: #FFFFFF;
+    --fg: #0E1113;
+    --muted: #58606A;
+    --border: #E6E8EC;
+    --card: #F8F9FB;
+
+    --accent: #0EA5E9;
+    --accent-ink: #06151C;
+
+    --ok: #16A34A;
+    --warn: #F59E0B;
+    --err: #EF4444;
+
+    --radius: 12px;
+    --shadow-1: 0 1px 2px rgba(0,0,0,.06);
+    --shadow-2: 0 8px 24px rgba(0,0,0,.12);
+
+    /* Safe area для мобильных */
+    --safe-b: env(safe-area-inset-bottom);
+    --safe-t: env(safe-area-inset-top);
+    --gap: 12px;
+
+    /* Типографика */
+    --font-sans: ui-sans-serif, system-ui, -apple-system, "Inter", "Geist", "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+    --lh: 1.45;
+
+    /* Шкалы */
+    --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px; --space-5: 20px;
+    --space-6: 24px; --space-7: 32px; --space-8: 40px; --space-9: 48px;
+
+    --fs-xs: 12px;
+    --fs-sm: 13px;
+    --fs-md: 14px;
+    --fs-lg: 15px;
+    --fs-h3: 16px;
+    --fs-h2: 18px;
+    --fs-h1: 20px;
   }
-  [data-theme="light"]{
-    --bg:#f7f8fb;--card:#ffffff;--ink:#0f1115;--muted:#5f6b7a;--line:#e3e7ef;
-    --acc:#16a34a;--warn:#d97706;--danger:#dc2626;--chip:#eef2ff;--chipline:#c7d2fe;
+
+  :root[data-theme="dark"] {
+    --bg: #0B0C0F;
+    --fg: #EAECEF;
+    --muted: #A3A9B3;
+    --border: #1F242B;
+    --card: #13161B;
+
+    --accent: #7DD3FC;
+    --accent-ink: #0B0E12;
+
+    --shadow-1: 0 1px 2px rgba(0,0,0,.35);
+    --shadow-2: 0 10px 28px rgba(0,0,0,.45);
+
+    /* Safe area для мобильных */
+    --safe-b: env(safe-area-inset-bottom);
+    --safe-t: env(safe-area-inset-top);
+    --gap: 12px;
   }
+
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
-  body{background:var(--bg);color:var(--ink)}
-  header{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);z-index:40}
+  html,body{height:100%;margin:0;font-family:var(--font-sans);line-height:var(--lh);text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;font-size:16px}
+  html{background:var(--bg);color:var(--fg)}
+  body{background:var(--bg);color:var(--fg)}
+  header{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--border);z-index:40}
   .wrap{max-width:1120px;margin:0 auto;padding:14px}
-  h1{margin:0 0 6px;font-size:20px}
-  .menu{display:flex;gap:8px;flex-wrap:wrap}
-  .btn{background:transparent;border:1px solid var(--line);color:var(--ink);padding:9px 12px;border-radius:10px;cursor:pointer}
-  .btn:hover{border-color:#94a3b8}
-  .btn[disabled]{opacity:.5;cursor:not-allowed}
-  .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink);font-size:13px}
-  .muted{color:var(--muted)}
-  .tag{font-size:12px;color:var(--ink);background:var(--chip);border:1px solid var(--chipline);padding:2px 6px;border-radius:6px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+  h1{font-size:var(--fs-h1);font-weight:700;letter-spacing:.1px;margin:var(--space-7) 0 var(--space-3)}
+  h3{font-size:var(--fs-h3);font-weight:600;margin:var(--space-5) 0 var(--space-3)}
+  .p-lead{font-size:var(--fs-lg);color:var(--muted);margin-bottom:var(--space-5)}
+  .text{font-size:var(--fs-md)}
+  .text-muted{color:var(--muted)}
+  .small{font-size:var(--fs-sm);color:var(--muted)}
+  .container{max-width:1040px;margin:0 auto;padding:0 16px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-1);padding:24px}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--fg);font-size:var(--fs-md);transition:transform .02s ease,background .15s ease,border-color .15s ease}
+  .btn:active{transform:translateY(1px)}
+  .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .btn-primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;box-shadow:var(--shadow-2)}
+  .btn-success{background:var(--ok);color:var(--accent-ink);border-color:transparent}
+  .btn-warn{background:var(--warn);color:var(--accent-ink);border-color:transparent}
+  .btn-danger{background:var(--err);color:var(--accent-ink);border-color:transparent}
+  .input,.select{width:100%;background:var(--bg);color:var(--fg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:var(--fs-md)}
+  .input::placeholder{color:var(--muted)}
+  .input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .nav-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+  .col-3{grid-column:span 3}
+  .col-4{grid-column:span 4}
+  .col-6{grid-column:span 6}
+  .col-12{grid-column:1/-1}
   .list{display:flex;flex-direction:column;gap:8px}
-  .item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--card);background:color-mix(in srgb, var(--card) 90%, #000 10%)}
+  .item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--card);background:color-mix(in srgb, var(--card) 90%, #000 10%)}
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .grow{flex:1}
-  input{background:transparent;border:1px solid var(--line);border-radius:10px;padding:9px 10px;color:var(--ink)}
-  input[type="date"]{padding:7px 10px}
-  select{font-size:14px;border:1px solid var(--line);border-radius:8px;padding:8px 12px;background:var(--card);color:var(--ink);cursor:pointer;min-width:120px;transition:border-color 0.2s}
-  select:hover{border-color:var(--acc);background:color-mix(in srgb, var(--card) 95%, var(--acc) 5%)}
-  select:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 2px color-mix(in srgb, var(--acc) 20%, transparent)}
+  select{font-size:14px;border:1px solid var(--border);border-radius:8px;padding:8px 12px;background:var(--card);color:var(--fg);cursor:pointer;min-width:120px;transition:border-color 0.2s}
+  select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent)}
   .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.35);z-index:50}
   .overlay.open{display:flex}
-  .popup{width:min(1020px,100% - 20px);max-height:86vh;overflow:auto}
-  .popheader{position:sticky;top:0;background:var(--card);padding-bottom:8px;margin:-12px -12px 12px -12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;border-radius:14px 14px 0 0}
-  .x{border:1px solid var(--line);background:transparent;border-radius:10px;padding:6px 10px;cursor:pointer}
+  .popup{width:min(100% - 24px,1000px);max-height:86vh;overflow-y:auto;overflow-x:hidden}
+  .popheader{position:sticky;top:0;background:var(--card);padding-bottom:8px;margin:-12px -12px 12px -12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;border-radius:var(--radius) var(--radius) 0 0}
+  .x{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);background:transparent;border-radius:10px;padding:6px 10px;cursor:pointer}
   .drawer{position:fixed;inset:0;display:none;justify-content:flex-end;align-items:stretch;background:rgba(0,0,0,.35);z-index:60}
   .drawer.open{display:flex}
-  .panel{width:min(520px,100%);background:var(--card);border-left:1px solid var(--line);padding:12px;overflow:auto}
-  .sticky{position:sticky;bottom:0;background:color-mix(in srgb, var(--card) 80%, transparent);backdrop-filter:blur(4px);margin:-12px;border-radius:0 0 14px 14px;padding:10px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end}
-  .empty{border:1px dashed var(--line);border-radius:12px;padding:16px;text-align:center;color:var(--muted)}
-  .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;opacity:0;transition:opacity .2s;z-index:80}
+  .panel{width:min(100%,480px);background:var(--card);border-left:1px solid var(--border);padding:12px;overflow:auto;-webkit-overflow-scrolling:touch}
+  .sticky{position:sticky;bottom:0;background:color-mix(in srgb, var(--card) 80%, transparent);backdrop-filter:blur(4px);margin:-12px;border-radius:0 0 var(--radius) var(--radius);padding:10px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;padding-bottom:calc(10px + var(--safe-b))}
+  .empty{border:1px dashed var(--border);border-radius:var(--radius);padding:16px;text-align:center;color:var(--muted)}
+  .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:var(--card);color:var(--fg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;opacity:0;transition:opacity .2s;z-index:80}
   .toast.show{opacity:1}
-  .history-table{display:grid;grid-template-columns:200px repeat(3, 150px) 150px;gap:8px;margin-bottom:16px;align-items:center}
-  .history-header{font-weight:600;padding:8px;border-bottom:1px solid var(--line);display:contents}
+  .history-table-wrapper{overflow-x:auto;margin-bottom:16px;-webkit-overflow-scrolling:touch}
+  .history-table{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:8px;margin-bottom:16px;align-items:center;min-width:800px}
+  .history-header{font-weight:600;padding:8px;border-bottom:1px solid var(--border);display:contents}
   .history-header > div{text-align:center}
   .history-row{display:contents}
-  .history-row > div{padding:6px;text-align:center;border:1px solid var(--line);background:var(--card)}
-  .history-form{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:16px}
+  .history-row > div{text-align:center;padding:8px}
+  #addColumn{cursor:pointer;color:var(--accent)}
+  .nav{display:flex;gap:var(--space-2);border-bottom:1px solid var(--border);margin-bottom:var(--space-6)}
+  .nav-item{position:relative;padding:var(--space-3) var(--space-4);cursor:pointer;color:var(--muted);transition:color .15s ease}
+  .nav-item.active{color:var(--accent);font-weight:600}
+  .nav-item.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--accent)}
+  .tab-content{display:none}
+  .tab-content.active{display:block}
+
+  /* Табы */
+  .tabs{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+  .tab{padding:12px 16px;border:1px solid #7dd3fc;border-radius:8px;background:#e0f2fe;color:#0369a1;font-size:var(--fs-md);cursor:pointer;transition:all 0.15s ease;text-align:left;width:100%}
+  .tab:hover{background:#b3e5fc;color:#01579b}
+  .tab.active{background:#0284c7;color:#f0f9ff;border-color:#0284c7;font-weight:600}
+  /* Мобильные медиа-запросы */
+  @media(max-width:1024px){
+    .col-3{grid-column:span 4}
+    .col-6{grid-column:span 8}
+  }
+  @media(max-width:640px){
+    .col-3{grid-column:1/-1}
+    .col-6{grid-column:1/-1}
+    .container{padding:0 16px}
+    .wrap{padding:16px}
+    .card{padding:16px}
+    .tabs{flex-direction:column;gap:6px}
+    .tab{font-size:13px;padding:10px 14px}
+  }
+  @media(max-width:480px){
+    .container{padding:0 12px}
+    .wrap{padding:12px}
+    .card{padding:12px}
+    header{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--border);z-index:40;padding-top:var(--safe-t)}
+    .grid{gap:12px}
+    .popup{width:calc(100% - 16px);max-height:calc(100vh - var(--safe-t) - var(--safe-b) - 48px);overflow-y:auto;overflow-x:hidden}
+    .panel{width:100%;padding-bottom:calc(12px + var(--safe-b))}
+    .sticky{padding-bottom:calc(10px + var(--safe-b))}
+    .toast{bottom:calc(16px + var(--safe-b))}
+    .menu{flex-wrap:wrap;gap:4px}
+    .menu button{font-size:13px;padding:8px 10px}
+    .menu .pill{font-size:11px;padding:4px 8px}
+    .history-table{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:4px;font-size:12px;min-width:600px}
+    .history-table .history-header > div,.history-table .history-row > div{padding:4px}
+    .history-table-wrapper{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .row{gap:8px}
+    .item{padding:8px;gap:8px}
+    .list{gap:6px}
+  }
+  @media(max-width:480px){
+    .tabs{flex-direction:column;gap:6px}
+    .tab{font-size:13px;padding:10px 14px}
+    /* Touch-friendly размеры для мобильных */
+    .btn,input[type="button"],input[type="submit"],button,select{min-height:44px;min-width:44px}
+    .btn{font-size:14px;padding:10px 12px}
+  }
 </style>
-</head>
 <body>
-<header>
+<header class="header">
   <div class="wrap">
-    <h1>Трекер тренировок — фронтенд v2</h1>
+    <h1>Трекер тренировок</h1>
     <div class="menu">
-      <button class="btn" data-open="plan">План</button>
-      <button class="btn" data-open="exercises">Упражнения</button>
-      <button class="btn" data-open="history">История</button>
-      <button class="btn" data-open="settings">Настройки</button>
+      <button class="btn" data-open="plan">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="none" stroke="currentColor" stroke-width="2"/>
+          <polyline points="14,2 14,8 20,8" fill="none" stroke="currentColor" stroke-width="2"/>
+          <line x1="16" y1="13" x2="8" y2="13" fill="none" stroke="currentColor" stroke-width="2"/>
+          <line x1="16" y1="17" x2="8" y2="17" fill="none" stroke="currentColor" stroke-width="2"/>
+          <polyline points="10,9 9,9 8,9" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        План
+      </button>
+      <button class="btn" data-open="exercises">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        Упражнения
+      </button>
+      <button class="btn" data-open="measurements">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M21 21V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M3 21h18" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M7 12v9" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M11 12v9" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M15 12v9" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M19 12v9" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        История
+      </button>
+      <button class="btn" data-open="nutrition">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M7 2v20" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M21 15V2v13a2 2 0 0 1-2 2H9" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        Питание
+      </button>
+      <button class="btn" data-open="settings">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        Настройки
+      </button>
       <span class="pill">Пользователь: <b id="userLabel">—</b></span>
       <span class="pill">Тема: <b id="themeLabel">Тёмная</b></span>
     </div>
   </div>
 </header>
 
-<main class="wrap">
-  <section class="card">
-    <h3 style="margin:0 0 8px">Добро пожаловать</h3>
-    <p class="muted">Кликабельный фронтенд без бэка/импорта. Открывайте поп‑апы вверху.</p>
-  </section>
+<main class="container">
+  <div class="grid">
+    <div class="col-3">
+      <section class="card">
+        <h3>Добро пожаловать</h3>
+        <p class="text-muted">Трекер тренировок с данными из JSON.</p>
+
+        <div class="tabs" style="margin-top: var(--space-6);">
+          <button class="tab active" data-tab="tab-overview" aria-selected="true">Обзор</button>
+          <button class="tab" data-tab="tab-stats" aria-selected="false">Статистика</button>
+          <button class="tab" data-tab="tab-history" aria-selected="false">История</button>
+        </div>
+
+        <div id="tab-overview" class="tab-content active">
+          <p class="text">Основная информация о ваших тренировках и прогрессе.</p>
+        </div>
+
+        <div id="tab-stats" class="tab-content">
+          <p class="text-muted">Статистика тренировок и достижений.</p>
+          <div class="row" style="margin-top: 12px; gap: 12px;">
+            <div style="text-align: center;">
+              <div class="text-muted small">Всего тренировок</div>
+              <div style="font-size: var(--fs-h2); font-weight: 700;">24</div>
+            </div>
+            <div style="text-align: center;">
+              <div class="text-muted small">Рекорды</div>
+              <div style="font-size: var(--fs-h2); font-weight: 700; color: var(--ok);">8</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-history" class="tab-content">
+          <p class="text-muted">История ваших последних активностей.</p>
+          <div class="list" style="margin-top: 12px;">
+            <div class="item">
+              <div><b>Присед</b><div class="small text-muted">70 кг × 4 подхода</div></div>
+              <span class="tag">Ноги</span>
+            </div>
+            <div class="item">
+              <div><b>Жим лежа</b><div class="small text-muted">60 кг × 4 подхода</div></div>
+              <span class="tag">Грудь</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="col-6">
+      <section class="card">
+        <div class="section-title">
+          <h2>Быстрые действия</h2>
+        </div>
+        <div class="list">
+          <div class="item">
+            <div>
+              📅
+              <b>План тренировок</b>
+              <div class="small text-muted">Создайте план на сегодня</div>
+            </div>
+            <button class="btn btn-primary" data-open="plan">Создать</button>
+          </div>
+          <div class="item">
+            <div>
+              📊
+              <b>Замеры</b>
+              <div class="small text-muted">Обновите параметры тела</div>
+            </div>
+            <button class="btn btn-primary" data-open="measurements">Добавить</button>
+          </div>
+          <div class="item">
+            <div>
+              🥗
+              <b>Питание</b>
+              <div class="small text-muted">Запишите приём пищи</div>
+            </div>
+            <button class="btn btn-primary" data-open="nutrition">Ввести</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="col-3">
+      <section class="card">
+        <div class="section-title">
+          <h2>Прогресс</h2>
+        </div>
+        <div class="list">
+          <div class="item">
+            <div>
+              <svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="margin-right: 8px; color: var(--ok);">
+                <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" fill="none" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <b>Тренд вверх</b>
+              <div class="small text-muted">+2.5 кг в жиме</div>
+            </div>
+            <span class="tag" style="background: var(--ok); color: var(--accent-ink);">+PR</span>
+          </div>
+          <div class="item">
+            <div>
+              <svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="margin-right: 8px; color: var(--warn);">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="none" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <b>Цель близко</b>
+              <div class="small text-muted">Осталось 2 кг до цели</div>
+            </div>
+            <span class="tag">Цель</span>
+          </div>
+          <div class="item">
+            <div>
+              <svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="margin-right: 8px; color: var(--err);">
+                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+                <line x1="15" y1="9" x2="9" y2="15" fill="none" stroke="currentColor" stroke-width="2"/>
+                <line x1="9" y1="9" x2="15" y2="15" fill="none" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <b>Пропуск</b>
+              <div class="small text-muted">2 дня без тренировки</div>
+            </div>
+            <span class="tag" style="background: var(--err); color: var(--accent-ink);">Пропуск</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
 </main>
 
 <!-- PLAN -->
 <div class="overlay" id="ov-plan" data-overlay>
   <div class="popup card">
     <div class="popheader">
-      <h3 style="margin:0 8px">План</h3>
-      <button class="x" data-close>✕</button>
+      <h2>План</h2>
+      <button class="btn" data-close aria-label="Закрыть">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+          <line x1="6" y1="6" x2="18" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
     </div>
     <div class="row" style="margin-bottom:8px">
       <span class="pill">Предыдущее занятие: <b id="prevWorkout">—</b></span>
@@ -91,16 +401,16 @@
     <div class="card" style="margin-bottom:10px">
       <div class="row">
         <label class="pill">Дата следующего занятия
-          <input id="planDate" type="date">
+          <input id="planDate" type="date" class="input">
         </label>
         <label class="pill">Предложенный день цикла
-          <select id="daySel">
+          <select id="daySel" class="select">
             <option value="1">1 — Ноги/Плечи</option>
             <option value="2">2 — Грудь/Бицепс</option>
             <option value="3">3 — Спина/Трицепс</option>
           </select>
         </label>
-        <button class="btn" id="btnGen">Сгенерировать</button>
+        <button class="btn btn-primary" id="btnGen">Сгенерировать</button>
       </div>
     </div>
 
@@ -114,7 +424,7 @@
       <button class="btn" id="btnEditCool">Редактировать заминку</button>
       <button class="btn" id="btnAddWeight">Добавить вес</button>
       <div class="grow"></div>
-      <button class="btn" id="btnSave" disabled>Отметить тренировку</button>
+      <button class="btn btn-primary" id="btnSave" disabled>Отметить тренировку</button>
     </div>
   </div>
 </div>
@@ -123,8 +433,13 @@
 <div class="drawer" id="drawer">
   <div class="panel card">
     <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
-      <h3 id="drTitle" style="margin:0">Редактор</h3>
-      <button class="x" id="drClose">✕</button>
+      <h3 id="drTitle">Редактор</h3>
+      <button class="btn" id="drClose" aria-label="Закрыть">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+          <line x1="6" y1="6" x2="18" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
     </div>
     <div class="row" style="margin-bottom:8px">
       <span class="pill">Группа: <b id="drGroup">—</b></span>
@@ -133,7 +448,7 @@
     </div>
     <div id="drList" class="list" style="margin-bottom:10px"></div>
     <div class="sticky">
-      <button class="btn" id="drApply">Применить</button>
+      <button class="btn btn-primary" id="drApply">Применить</button>
     </div>
   </div>
 </div>
@@ -142,20 +457,25 @@
 <div class="overlay" id="ov-add" data-overlay>
   <div class="popup card">
     <div class="popheader">
-      <h3 style="margin:0 8px">Добавить вес (PR)</h3>
-      <button class="x" data-close>✕</button>
+      <h2>Добавить вес (PR)</h2>
+      <button class="btn" data-close aria-label="Закрыть">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+          <line x1="6" y1="6" x2="18" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
     </div>
     <div class="list">
       <div class="item">
         <div>Группа</div>
-        <select id="awGroup">
+        <select id="awGroup" class="select">
           <option>Ноги</option><option>Грудь</option><option>Спина</option>
           <option>Плечи</option><option>Бицепс</option><option>Трицепс</option>
         </select>
       </div>
       <div class="item">
         <div>Упражнение</div>
-        <select id="awExercise"></select>
+        <select id="awExercise" class="select"></select>
       </div>
       <div class="item">
         <div class="grow">
@@ -169,7 +489,7 @@
         </div>
       </div>
       <div class="row" style="justify-content:flex-end">
-        <button class="btn" id="awApply">Применить</button>
+        <button class="btn btn-primary" id="awApply">Применить</button>
       </div>
     </div>
   </div>
@@ -179,28 +499,54 @@
 <div class="overlay" id="ov-exercises" data-overlay>
   <div class="popup card">
     <div class="popheader">
-      <h3 style="margin:0 8px">Упражнения</h3>
-      <button class="x" data-close>✕</button>
+      <h2>Упражнения</h2>
+      <button class="btn" data-close aria-label="Закрыть">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+          <line x1="6" y1="6" x2="18" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
     </div>
     <div class="row" style="margin-bottom:8px">
-      <select id="exGroup">
+      <select id="exGroup" class="select">
         <option>Ноги</option><option>Грудь</option><option>Спина</option>
         <option>Плечи</option><option>Бицепс</option><option>Трицепс</option>
       </select>
-      <input id="exSearch" placeholder="Поиск…">
+      <input id="exSearch" class="input" placeholder="Поиск…">
     </div>
     <div id="exList" class="list"></div>
   </div>
 </div>
 
-<!-- HISTORY -->
-<div class="overlay" id="ov-history" data-overlay>
+<!-- NUTRITION -->
+<div class="overlay" id="ov-nutrition" data-overlay>
   <div class="popup card">
     <div class="popheader">
-      <h3 style="margin:0 8px">История</h3>
-      <button class="x" data-close>✕</button>
+      <h2>Питание</h2>
+      <button class="btn" data-close aria-label="Закрыть">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+          <line x1="6" y1="6" x2="18" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
     </div>
-    <div id="histArea"></div>
+    <div id="nutritionArea"></div>
+  </div>
+</div>
+
+<!-- MEASUREMENTS -->
+<div class="overlay" id="ov-measurements" data-overlay>
+  <div class="popup card">
+    <div class="popheader">
+      <h2>История</h2>
+      <button class="btn" data-close aria-label="Закрыть">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+          <line x1="6" y1="6" x2="18" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
+    </div>
+    <div id="measurementsArea"></div>
   </div>
 </div>
 
@@ -208,24 +554,48 @@
 <div class="overlay" id="ov-settings" data-overlay>
   <div class="popup card">
     <div class="popheader">
-      <h3 style="margin:0 8px">Настройки</h3>
-      <button class="x" data-close>✕</button>
+      <h2>Настройки</h2>
+      <button class="btn" data-close aria-label="Закрыть">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+          <line x1="6" y1="6" x2="18" y2="18" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
     </div>
     <div class="list">
       <div class="item">
-        <div>Имя пользователя</div>
-        <input id="userName" class="grow" placeholder="Антон">
+        <div>Профиль</div>
+        <div class="row">
+          <div class="form-group" style="flex: 1;">
+            <label class="form-label" for="userName">Имя пользователя</label>
+            <input id="userName" class="input" placeholder="Антон">
+            <div class="form-help">Ваше имя для отображения в приложении</div>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label class="form-label" for="userEmail">Email</label>
+            <input id="userEmail" type="email" class="input" placeholder="email@example.com">
+            <div class="form-help">Для уведомлений и восстановления</div>
+          </div>
+        </div>
       </div>
       <div class="item">
         <div>Тема</div>
-        <select id="themeSel">
-          <option value="dark">Тёмная</option>
-          <option value="light">Светлая</option>
-        </select>
+        <div class="row">
+          <select id="themeSel" class="select">
+            <option value="dark">Тёмная</option>
+            <option value="light">Светлая</option>
+          </select>
+          <button class="btn" id="themeToggle" style="margin-left:8px">🔄</button>
+        </div>
       </div>
       <div class="item">
         <div>Данные</div>
-        <button class="btn" id="btnExport">Скачать JSON</button>
+        <div class="row">
+          <button class="btn btn-primary" id="btnExport">📁 Скачать JSON</button>
+          <button class="btn btn-success" onclick="toast('Успешно сохранено!')">✅ Сохранить</button>
+          <button class="btn btn-warn" onclick="toast('Предупреждение')">⚠️ Предупредить</button>
+          <button class="btn btn-danger" onclick="confirm('Удалить данные?') || toast('Отменено')">🗑️ Удалить</button>
+        </div>
       </div>
     </div>
   </div>
@@ -242,10 +612,146 @@ function todayISO(){ return isoDateOnly(new Date()); }
 function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1200); }
 
 /* DB */
-const DB_KEY="ft_front_db_v2";
-let DB = { user:{name:"Антон", theme:"dark"}, exercises:[], workouts:[], measurements:[] };
-function loadDB(){ try{ const raw=localStorage.getItem(DB_KEY); if(raw) DB=JSON.parse(raw);}catch(e){} }
-function saveDB(){ localStorage.setItem(DB_KEY, JSON.stringify(DB)); }
+let DB = { user:{name:"Антон", theme:"dark"}, exercises:[], workouts:[], measurements:[], nutrition:[] };
+let loadedMeasurements = []; // Для отслеживания загруженных данных
+let loadedNutrition = []; // Для отслеживания загруженных данных питания
+let measurementsList = [
+  {key:"waist", label:"Талия"},
+  {key:"chest_back", label:"Спина–грудь"},
+  {key:"arm_r", label:"Рука правая"},
+  {key:"arm_l", label:"Рука левая"},
+  {key:"thigh_r", label:"Бедро правое"},
+  {key:"thigh_l", label:"Бедро левое"},
+  {key:"forearm_r", label:"Предплечье правое"},
+  {key:"forearm_l", label:"Предплечье левое"}
+];
+let nutritionList = [
+  {key:"calories", label:"Калории"},
+  {key:"steps", label:"Шаги"},
+  {key:"weight", label:"Вес"}
+];
+
+async function loadDB(){
+  console.log("🔄 Загрузка данных из Firebase (фиксированная структура)...");
+
+  try {
+    // Используем тот же userId, что и при сохранении
+    const userId = DB.user.name || "user123";
+    const docRef = await firebase.firestore().collection("measurements").doc(userId).get();
+
+    if (docRef.exists) {
+      const data = docRef.data();
+      console.log("📋 Данные из Firebase:", data);
+
+      // Преобразуем фиксированную структуру в массив для обратной совместимости
+      DB.measurements = [];
+      loadedMeasurements = [];
+
+      // Извлекаем данные колонок замеров
+      for (let i = 1; i <= 4; i++) {
+        const colKey = `col${i}`;
+        const columnData = data[colKey];
+
+        if (columnData && columnData.date) {
+          DB.measurements.push(columnData);
+          loadedMeasurements.push(columnData);
+          console.log(`✅ Загружена колонка замеров ${i}:`, columnData);
+        } else {
+          console.log(`⚪ Колонка замеров ${i}: пустая`);
+        }
+      }
+
+      // Извлекаем данные колонок питания (если есть)
+      DB.nutrition = [];
+      loadedNutrition = [];
+      for (let i = 1; i <= 4; i++) {
+        const colKey = `nutrition_col${i}`;
+        const columnData = data[colKey];
+
+        if (columnData && columnData.date) {
+          DB.nutrition.push(columnData);
+          loadedNutrition.push(columnData);
+          console.log(`✅ Загружена колонка питания ${i}:`, columnData);
+        } else {
+          console.log(`⚪ Колонка питания ${i}: пустая`);
+        }
+      }
+
+      console.log(`✅ Загружено ${DB.measurements.length} колонок замеров и ${DB.nutrition.length} колонок питания из Firebase`);
+      toast(`Загружено ${DB.measurements.length} замеров и ${DB.nutrition.length} записей питания`);
+    } else {
+      console.log("📋 Документ не найден в Firebase - создаем пустую структуру");
+      DB.measurements = [];
+      loadedMeasurements = [];
+      DB.nutrition = [];
+      loadedNutrition = [];
+      toast("Нет сохраненных данных");
+    }
+
+  } catch(e) {
+    console.error("❌ Ошибка загрузки из Firebase:", e);
+    toast("Ошибка загрузки из Firebase");
+    DB.measurements = [];
+    loadedMeasurements = [];
+    DB.nutrition = [];
+    loadedNutrition = [];
+  }
+
+  // Создаем документ с пустой структурой если он не существует
+  if (DB.measurements.length === 0 && DB.nutrition.length === 0) {
+    console.log("📋 Создаем документ с пустой структурой в Firebase");
+    try {
+      const userId = DB.user.name || "user123";
+      const docRef = firebase.firestore().collection("measurements").doc(userId);
+
+      await docRef.set({
+        col1: null,
+        col2: null,
+        col3: null,
+        col4: null,
+        nutrition_col1: null,
+        nutrition_col2: null,
+        nutrition_col3: null,
+        nutrition_col4: null,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      console.log(`✅ Создан пустой документ для пользователя ${userId}`);
+    } catch(e) {
+      console.error("❌ Ошибка создания документа:", e);
+    }
+  }
+}
+
+async function saveDB(){
+  console.log("💾 Сохранение данных в Firebase...");
+  const measurementsToSave = DB.measurements.filter(m => !loadedMeasurements.some(lm => lm.date === m.date && JSON.stringify(lm) === JSON.stringify(m)));
+  
+  if (measurementsToSave.length === 0) {
+    console.log("ℹ️ Нет новых данных для сохранения");
+    toast("Нет новых данных");
+    return;
+  }
+
+  console.log(`📤 Сохраняем ${measurementsToSave.length} новых замеров`);
+  
+  try{
+    for (const measurement of measurementsToSave) {
+      const docRef = await firebase.firestore().collection("measurements").add(measurement);
+      console.log(`✅ Сохранен замер ${measurement.date} с ID: ${docRef.id}`);
+    }
+    
+    // Обновляем loadedMeasurements
+    loadedMeasurements.push(...measurementsToSave);
+    console.log(`✅ Все данные сохранены в Firebase (${measurementsToSave.length} замеров)`);
+    toast(`Сохранено ${measurementsToSave.length} замеров в Firebase`);
+  }catch(e){
+    console.error("❌ Ошибка сохранения в Firebase:", e);
+    // Fallback: сохраняем локально
+    localStorage.setItem("ft_front_db_v2", JSON.stringify(DB));
+    toast("Ошибка Firebase — данные сохранены локально");
+  }
+}
 
 /* Seed demo exercises + measurements */
 async function loadExercisesFromJSON(){
@@ -289,48 +795,67 @@ function seedIfEmpty(){
   if(!DB.exercises.length){
     loadExercisesFromJSON(); // Загружаем из JSON асинхронно
   }
-  if(!DB.measurements.length){
-    DB.measurements = [
-      {
-        date: "2020-10-14",
-        waist: 92,
-        chest_back: 96,
-        arm_r: 38,
-        arm_l: 38,
-        thigh_r: 98,
-        thigh_l: 98,
-        forearm_r: 30,
-        forearm_l: 30
-      },
-      {
-        date: "2025-01-12",
-        waist: 102,
-        chest_back: 102,
-        arm_r: 41,
-        arm_l: 41,
-        thigh_r: 102,
-        thigh_l: 102,
-        forearm_r: 30,
-        forearm_l: 30
-      },
-      {
-        date: "2025-07-31",
-        waist: 96.5,
-        chest_back: 116.0,
-        arm_r: 40.5,
-        arm_l: 40.6,
-        thigh_r: 59.0,
-        thigh_l: 59.5,
-        forearm_r: 33.0,
-        forearm_l: 32.5
-      }
-    ];
-  }
+  // НЕ добавляем демо-данные автоматически!
+  // Показываем пустую таблицу если нет данных из Firebase
+  console.log(`📊 Доступно замеров: ${DB.measurements.length}`);
 }
 
 /* Theme & User */
-function applyTheme(){ document.documentElement.setAttribute("data-theme", DB.user.theme||"dark"); $("themeLabel").textContent = DB.user.theme==="light"?"Светлая":"Тёмная"; }
-function syncUserUI(){ $("userLabel").textContent=DB.user.name||"—"; $("userName").value=DB.user.name||""; $("themeSel").value=DB.user.theme||"dark"; applyTheme(); }
+const root = document.documentElement;
+const saved = localStorage.getItem('theme');
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+root.setAttribute('data-theme', saved ?? (prefersDark ? 'dark' : 'light'));
+
+function applyTheme(){
+  const currentTheme = root.getAttribute('data-theme');
+  DB.user.theme = currentTheme;
+  localStorage.setItem('theme', currentTheme);
+  $("themeLabel").textContent = currentTheme==="light"?"Светлая":"Тёмная";
+}
+function syncUserUI(){
+  $("userLabel").textContent=DB.user.name||"—";
+  $("userName").value=DB.user.name||"";
+  const currentTheme = root.getAttribute('data-theme');
+  $("themeSel").value=currentTheme;
+  DB.user.theme = currentTheme;
+  applyTheme();
+}
+
+document.getElementById('themeSel').addEventListener('change', () => {
+  const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  root.setAttribute('data-theme', next);
+  DB.user.theme = next;
+  localStorage.setItem('theme', next);
+  syncUserUI();
+});
+
+/* Tab Navigation */
+function initTabs(){
+  const tabs = document.querySelectorAll('.tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      // Remove active state from all tabs
+      tabs.forEach(t => {
+        t.setAttribute('aria-selected', 'false');
+        t.classList.remove('active');
+      });
+
+      // Set active state on clicked tab
+      tab.setAttribute('aria-selected', 'true');
+      tab.classList.add('active');
+
+      // Show corresponding tab content
+      const tabId = tab.getAttribute('data-tab');
+      const contents = document.querySelectorAll('.tab-content');
+      contents.forEach(content => {
+        content.classList.remove('active');
+        if(content.id === tabId) {
+          content.classList.add('active');
+        }
+      });
+    });
+  });
+}
 
 /* Plan state */
 const CYCLE={1:{main:"Ноги",aux:"Плечи"},2:{main:"Грудь",aux:"Бицепс"},3:{main:"Спина",aux:"Трицепс"}};
@@ -423,7 +948,7 @@ $("drApply").addEventListener("click", ()=>{
 });
 
 /* Save workout */
-function saveWorkout(){
+async function saveWorkout(){
   if(!PLAN){ toast("Сначала сгенерируйте план"); return; }
   const dateISO=PLAN.dateISO||todayISO();
   const applyInc=(arr)=> arr.map(it=>{
@@ -435,7 +960,7 @@ function saveWorkout(){
     return {name:it.name, sets:it.sets, weight:(newPR ?? null)};
   });
   const rec={ date:dateISO, day:PLAN.day, mainGroup:PLAN.mainGroup, auxGroup:PLAN.auxGroup, main:applyInc(PLAN.main), aux:applyInc(PLAN.aux), cooldown:PLAN.cooldown.slice(0,2) };
-  DB.workouts.push(rec); saveDB(); setPrevWorkoutLabel(); $("btnSave").disabled=true; toast("Тренировка сохранена");
+  DB.workouts.push(rec); await saveDB(); setPrevWorkoutLabel(); $("btnSave").disabled=true; toast("Тренировка сохранена");
 }
 
 /* Add Weight overlay */
@@ -450,89 +975,409 @@ $("awMinus").addEventListener("click",()=>{ AW.delta=Math.max(0,AW.delta-2.5); u
 $("awApply").addEventListener("click",()=>{ if(!AW.exId){toast("Выберите упражнение"); return;} const ex=DB.exercises.find(e=> e.id===AW.exId); const old=(typeof ex.pr==="number")?ex.pr:0; if(AW.delta===0){toast("Нечего добавлять"); return;} ex.pr=old+AW.delta; ex.lastDate=todayISO(); saveDB(); toast("PR обновлён"); document.getElementById("ov-add").classList.remove("open"); });
 
 /* Exercises */
-function renderExercises(){ const g=$("exGroup").value; const q=$("exSearch").value.trim().toLowerCase(); const list=$("exList"); list.innerHTML=""; DB.exercises.filter(e=> e.group===g).filter(e=> !q || e.name.toLowerCase().includes(q)).forEach(ex=>{ const last=ex.lastDate?fmt(ex.lastDate):"—"; const pr=ex.pr==null?"—":(ex.pr+" кг"); const row=document.createElement("div"); row.className="item"; row.innerHTML=`<div><b>${ex.name}</b><div class="muted">PR: ${pr} · Последний раз: ${last} · Подходы: 4</div></div><span class="tag">${ex.group}</span>`; list.appendChild(row); }); }
+function renderExercises(){ 
+  const g=$("exGroup").value; 
+  const q=$("exSearch").value.trim().toLowerCase(); 
+  const list=$("exList"); 
+  list.innerHTML=""; 
+  DB.exercises.filter(e=> e.group===g).filter(e=> !q || e.name.toLowerCase().includes(q)).forEach(ex=>{ 
+    const last=ex.lastDate?fmt(ex.lastDate):"—"; 
+    const pr=ex.pr==null?"—":(ex.pr+" кг"); 
+    const row=document.createElement("div"); 
+    row.className="item"; 
+    row.innerHTML=`<div><b>${ex.name}</b><div class="muted">PR: ${pr} · Последний раз: ${last} · Подходы: 4</div></div><span class="tag">${ex.group}</span>`; 
+    list.appendChild(row); 
+  }); 
+}
 $("exGroup").addEventListener("change", renderExercises);
 $("exSearch").addEventListener("input", renderExercises);
 
-/* History */
 function renderHistory(){
-  const area=$("histArea"); area.innerHTML="";
-  if(!DB.measurements.length){
-    area.innerHTML='<div class="empty">Пока нет замеров.</div>';
-    return;
-  }
-  // Создаем таблицу
+  const area=$("measurementsArea"); area.innerHTML="";
+  // Создаем wrapper с горизонтальной прокруткой
+  const wrapper=document.createElement("div"); wrapper.className="history-table-wrapper";
+  // Создаем таблицу с 5 колонками
   const table=document.createElement("div"); table.className="history-table";
-  const sortedMeasurements = DB.measurements.slice().sort((a,b)=> new Date(a.date)-new Date(b.date)); // Сортируем по дате (старые слева)
   const header=document.createElement("div"); header.className="history-header";
-  header.innerHTML='<div>Замер</div>' + sortedMeasurements.map(m=> `<div>${fmt(m.date)}</div>`).join('') + '<div><button class="btn" id="addMeasurement">Добавить</button></div>';
+  header.innerHTML=`
+    <div>Замер</div>
+    <div id="col2Header"><input id="date2" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+    <div id="col3Header"><input id="date3" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+    <div id="col4Header"><input id="date4" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+    <div id="col5Header"><input id="date5" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+  `;
   table.appendChild(header);
-  const measurements = [
-    {key:"waist", label:"Талия"},
-    {key:"chest_back", label:"Спина–грудь"},
-    {key:"arm_r", label:"Рука правая"},
-    {key:"arm_l", label:"Рука левая"},
-    {key:"thigh_r", label:"Бедро правое"},
-    {key:"thigh_l", label:"Бедро левое"},
-    {key:"forearm_r", label:"Предплечье правое"},
-    {key:"forearm_l", label:"Предплечье левое"}
-  ];
-  measurements.forEach(measure=>{
+
+  // Ряды с названиями замеров и input полями в колонках
+  measurementsList.forEach(measure=>{
     const row=document.createElement("div"); row.className="history-row";
-    const cells = ['<div>' + measure.label + '</div>'];
-    sortedMeasurements.forEach(m=>{
-      let value = m[measure.key] + ' см';
-      if ((measure.key === 'thigh_r' || measure.key === 'thigh_l') && (m.date === '2020-10-14' || m.date === '2025-01-12')) {
-        value = m[measure.key] + '* см';
-      }
-      cells.push('<div>' + value + '</div>');
-    });
-    cells.push('<div></div>');
-    row.innerHTML = cells.join('');
+    row.innerHTML=`
+      <div>${measure.label}</div>
+      <div><input id="input${measure.key}_2" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+      <div><input id="input${measure.key}_3" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+      <div><input id="input${measure.key}_4" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+      <div><input id="input${measure.key}_5" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+    `;
     table.appendChild(row);
   });
-  area.appendChild(table);
-  // Сноска
-  const note = document.createElement("div"); note.className="muted"; note.textContent = "* Обхват бедер"; note.style.fontSize="12px"; note.style.marginTop="8px";
-  area.appendChild(note);
-  // Форма добавления
-  const form=document.createElement("div"); form.className="history-form"; form.id="measurementForm"; form.style.display="none";
-  form.innerHTML=`
-    <h4>Добавить замер</h4>
-    <div class="row" style="margin-bottom:8px">
-      <label class="pill">Дата<input id="newDate" type="date" value="${todayISO()}"></label>
-    </div>
-    <div class="list">
-      ${measurements.map(m=> `<div class="item"><div>${m.label}</div><input id="new${m.key}" type="number" step="0.1" placeholder="см"></div>`).join('')}
-    </div>
-    <div class="row" style="justify-content:flex-end">
-      <button class="btn" id="cancelAdd">Отмена</button>
-      <button class="btn" id="saveAdd">Сохранить</button>
-    </div>
-  `;
-  area.appendChild(form);
-  // Слушатели
-  $("addMeasurement").addEventListener("click", ()=> form.style.display="block");
-  $("cancelAdd").addEventListener("click", ()=> form.style.display="none");
-  $("saveAdd").addEventListener("click", ()=>{
-    const newDate=$("newDate").value;
-    const newMeasurement={date:newDate};
-    let allFilled=true;
-    measurements.forEach(m=>{
-      const val=parseFloat($(`new${m.key}`).value);
-      if(isNaN(val)){ allFilled=false; } else { newMeasurement[m.key]=val; }
-    });
-    if(!allFilled || !newDate){ toast("Заполните все поля"); return; }
-    DB.measurements.push(newMeasurement);
-    saveDB();
-    renderHistory();
-    toast("Замер добавлен");
+  wrapper.appendChild(table);
+  area.appendChild(wrapper);
+
+  // Заполняем таблицу данными из DB.measurements (фиксированная структура)
+  console.log(`📊 Заполняем таблицу ${DB.measurements.length} колонками из Firebase`);
+  DB.measurements.forEach((columnData, index) => {
+    console.log(`📅 Колонка ${index + 1}:`, columnData);
+
+    // Определяем колонку в интерфейсе (колонка 2 соответствует col1 в данных)
+    const colIndex = index + 2;
+
+    // Проверяем, существует ли колонка в DOM
+    const dateInput = $(`date${colIndex}`);
+    if (dateInput && columnData.date) {
+      dateInput.value = columnData.date;
+      console.log(`   ✅ Установлена дата колонки ${colIndex}: ${columnData.date}`);
+
+      // Заполняем значения замеров
+      measurementsList.forEach(measure => {
+        const input = $(`input${measure.key}_${colIndex}`);
+        if (input && columnData[measure.key] !== undefined) {
+          input.value = columnData[measure.key];
+          console.log(`   ✅ ${measure.label} колонки ${colIndex}: ${columnData[measure.key]}`);
+        }
+      });
+    } else {
+      console.log(`   ❌ Колонка ${colIndex} не найдена в DOM или пустая дата`);
+    }
   });
+
+  // Всегда показываем кнопку Сохранить
+  const saveButton = document.createElement("button");
+  saveButton.className = "btn btn-primary";
+  saveButton.textContent = "Сохранить";
+  saveButton.style.marginTop = "16px";
+  saveButton.addEventListener("click", async ()=>{
+    console.log("💾 Сохраняем все данные в Firebase (фиксированная структура)");
+    console.log("📋 Проверяем все колонки на наличие данных:");
+
+    // Собираем данные из всех колонок
+    const columnsData = {};
+    for (let col = 2; col <= 5; col++) {
+      const dateInput = $(`date${col}`);
+      console.log(`🔍 Проверяем колонку ${col}:`);
+      console.log(`   - dateInput элемент:`, dateInput);
+      console.log(`   - dateInput.value:`, dateInput ? dateInput.value : 'элемент не найден');
+
+      if (!dateInput || !dateInput.value) {
+        columnsData[`col${col-1}`] = null;
+        console.log(`⏭️ Колонка ${col} пропущена - нет даты`);
+        continue;
+      }
+
+      console.log(`📅 Колонка ${col} имеет дату: ${dateInput.value}`);
+
+      const columnData = {date: dateInput.value};
+      let hasAtLeastOneValue = false;
+
+      measurementsList.forEach(m => {
+        const input = $(`input${m.key}_${col}`);
+        const val = parseFloat(input.value);
+        console.log(`   ${m.label} (${m.key}_${col}): элемент=${input ? 'найден' : 'не найден'}, значение="${input ? input.value : 'N/A'}", число=${val}`);
+
+        if (!isNaN(val) && val > 0) {
+          columnData[m.key] = val;
+          hasAtLeastOneValue = true;
+          console.log(`   ✅ ${m.label}: ${val}`);
+        }
+      });
+
+      columnsData[`col${col-1}`] = hasAtLeastOneValue ? columnData : null;
+    }
+
+    console.log("📋 Данные для сохранения:", columnsData);
+
+    if (Object.values(columnsData).every(col => col === null)) {
+      console.log("❌ Нет данных для сохранения");
+      toast("Заполните данные в таблице");
+      return;
+    }
+
+    await saveAllMeasurementsToFirebase();
+  });
+
+  area.appendChild(saveButton);
+  // Слушатели для заголовков колонок - убираем автоматическое сохранение
+  // $("col2Header").addEventListener("click", ()=> saveColumn(2));
+  // $("col3Header").addEventListener("click", ()=> saveColumn(3));
+  // $("col4Header").addEventListener("click", ()=> saveColumn(4));
+  // $("col5Header").addEventListener("click", ()=> saveColumn(5));
 }
 
+function renderNutrition(){
+  const area=$("nutritionArea"); area.innerHTML="";
+  // Создаем wrapper с горизонтальной прокруткой
+  const wrapper=document.createElement("div"); wrapper.className="history-table-wrapper";
+  // Создаем таблицу с 5 колонками
+  const table=document.createElement("div"); table.className="history-table";
+  const header=document.createElement("div"); header.className="history-header";
+  header.innerHTML=`
+    <div>Показатель</div>
+    <div id="nutrition-col2Header"><input id="nutrition-date2" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+    <div id="nutrition-col3Header"><input id="nutrition-date3" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+    <div id="nutrition-col4Header"><input id="nutrition-date4" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+    <div id="nutrition-col5Header"><input id="nutrition-date5" type="date" value="${todayISO()}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+  `;
+  table.appendChild(header);
+
+  // Ряды с названиями показателей питания и input полями в колонках
+  nutritionList.forEach(nutritionItem=>{
+    const row=document.createElement("div"); row.className="history-row";
+    row.innerHTML=`
+      <div>${nutritionItem.label}</div>
+      <div><input id="input${nutritionItem.key}_2" type="number" step="${nutritionItem.key==='weight'?'0.1':'1'}" placeholder="${nutritionItem.key==='calories'?'ккал':nutritionItem.key==='steps'?'шагов':'кг'}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+      <div><input id="input${nutritionItem.key}_3" type="number" step="${nutritionItem.key==='weight'?'0.1':'1'}" placeholder="${nutritionItem.key==='calories'?'ккал':nutritionItem.key==='steps'?'шагов':'кг'}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+      <div><input id="input${nutritionItem.key}_4" type="number" step="${nutritionItem.key==='weight'?'0.1':'1'}" placeholder="${nutritionItem.key==='calories'?'ккал':nutritionItem.key==='steps'?'шагов':'кг'}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+      <div><input id="input${nutritionItem.key}_5" type="number" step="${nutritionItem.key==='weight'?'0.1':'1'}" placeholder="${nutritionItem.key==='calories'?'ккал':nutritionItem.key==='steps'?'шагов':'кг'}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>
+    `;
+    table.appendChild(row);
+  });
+  wrapper.appendChild(table);
+  area.appendChild(wrapper);
+
+  // Заполняем таблицу данными из DB.nutrition (фиксированная структура)
+  console.log(`📊 Заполняем таблицу питания ${DB.nutrition.length} колонками из Firebase`);
+  DB.nutrition.forEach((columnData, index) => {
+    console.log(`📅 Колонка питания ${index + 1}:`, columnData);
+
+    // Определяем колонку в интерфейсе (колонка 2 соответствует nutrition_col1 в данных)
+    const colIndex = index + 2;
+
+    // Проверяем, существует ли колонка в DOM
+    const dateInput = $(`nutrition-date${colIndex}`);
+    if (dateInput && columnData.date) {
+      dateInput.value = columnData.date;
+      console.log(`   ✅ Установлена дата колонки питания ${colIndex}: ${columnData.date}`);
+
+      // Заполняем значения показателей питания
+      nutritionList.forEach(nutritionItem => {
+        const input = $(`input${nutritionItem.key}_${colIndex}`);
+        if (input && columnData[nutritionItem.key] !== undefined) {
+          input.value = columnData[nutritionItem.key];
+          console.log(`   ✅ ${nutritionItem.label} колонки питания ${colIndex}: ${columnData[nutritionItem.key]}`);
+        }
+      });
+    } else {
+      console.log(`   ❌ Колонка питания ${colIndex} не найдена в DOM или пустая дата`);
+    }
+  });
+
+  // Всегда показываем кнопку Сохранить
+  const saveButton = document.createElement("button");
+  saveButton.className = "btn btn-primary";
+  saveButton.textContent = "Сохранить данные питания";
+  saveButton.style.marginTop = "16px";
+  saveButton.addEventListener("click", async ()=>{
+    console.log("💾 Сохраняем данные питания в Firebase (фиксированная структура)");
+    console.log("📋 Проверяем все колонки питания на наличие данных:");
+
+    // Собираем данные из всех колонок питания
+    const nutritionColumnsData = {};
+    for (let col = 2; col <= 5; col++) {
+      const dateInput = $(`nutrition-date${col}`);
+      console.log(`🔍 Проверяем колонку питания ${col}:`);
+      console.log(`   - dateInput элемент:`, dateInput);
+      console.log(`   - dateInput.value:`, dateInput ? dateInput.value : 'элемент не найден');
+
+      if (!dateInput || !dateInput.value) {
+        nutritionColumnsData[`nutrition_col${col-1}`] = null;
+        console.log(`⏭️ Колонка питания ${col} пропущена - нет даты`);
+        continue;
+      }
+
+      console.log(`📅 Колонка питания ${col} имеет дату: ${dateInput.value}`);
+
+      const columnData = {date: dateInput.value};
+      let hasAtLeastOneValue = false;
+
+      nutritionList.forEach(n => {
+        const input = $(`input${n.key}_${col}`);
+        const val = parseFloat(input.value);
+        console.log(`   ${n.label} (${n.key}_${col}): элемент=${input ? 'найден' : 'не найден'}, значение="${input ? input.value : 'N/A'}", число=${val}`);
+
+        if (!isNaN(val) && val > 0) {
+          columnData[n.key] = val;
+          hasAtLeastOneValue = true;
+          console.log(`   ✅ ${n.label}: ${val}`);
+        }
+      });
+
+      nutritionColumnsData[`nutrition_col${col-1}`] = hasAtLeastOneValue ? columnData : null;
+    }
+
+    console.log("📋 Данные питания для сохранения:", nutritionColumnsData);
+
+    if (Object.values(nutritionColumnsData).every(col => col === null)) {
+      console.log("❌ Нет данных питания для сохранения");
+      toast("Заполните данные в таблице питания");
+      return;
+    }
+
+    await saveNutritionToFirebase(nutritionColumnsData);
+  });
+
+  area.appendChild(saveButton);
+}
+
+async function saveNutritionToFirebase(nutritionColumnsData){
+  console.log(`💾 Сохраняем данные питания в Firebase (фиксированная структура)`);
+
+  console.log("📋 Данные питания для сохранения:", nutritionColumnsData);
+
+  try {
+    // Используем фиксированный userId для простоты (или DB.user.name если есть)
+    const userId = DB.user.name || "user123";
+    const docRef = firebase.firestore().collection("measurements").doc(userId);
+
+    await docRef.set({
+      ...nutritionColumnsData,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    console.log(`✅ Данные питания сохранены в Firebase для пользователя ${userId}`);
+    toast(`Данные питания сохранены в Firebase`);
+
+    // Очищаем локальные данные после успешного сохранения
+    DB.nutrition = [];
+
+  } catch(e) {
+    console.error("❌ Ошибка сохранения данных питания в Firebase:", e);
+    localStorage.setItem("ft_front_db_v2", JSON.stringify(DB));
+    toast("Ошибка Firebase — данные питания сохранены локально");
+  }
+}
+
+async function saveAllMeasurementsToFirebase(){
+  console.log(`💾 Сохраняем данные в Firebase (фиксированная структура)`);
+
+  // Собираем данные из всех колонок
+  const columnsData = {};
+  for (let col = 2; col <= 5; col++) {
+    const dateInput = $(`date${col}`);
+    if (!dateInput || !dateInput.value) {
+      columnsData[`col${col-1}`] = null;
+      continue;
+    }
+
+    const columnData = {date: dateInput.value};
+    let hasData = false;
+
+    measurementsList.forEach(m => {
+      const input = $(`input${m.key}_${col}`);
+      const val = parseFloat(input.value);
+      if (!isNaN(val) && val > 0) {
+        columnData[m.key] = val;
+        hasData = true;
+      }
+    });
+
+    columnsData[`col${col-1}`] = hasData ? columnData : null;
+  }
+
+  console.log("📋 Данные для сохранения:", columnsData);
+
+  try {
+    // Используем фиксированный userId для простоты (или DB.user.name если есть)
+    const userId = DB.user.name || "user123";
+    const docRef = firebase.firestore().collection("measurements").doc(userId);
+
+    await docRef.set({
+      ...columnsData,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    console.log(`✅ Данные сохранены в Firebase для пользователя ${userId}`);
+    toast(`Данные сохранены в Firebase`);
+
+    // Очищаем локальные данные после успешного сохранения
+    DB.measurements = [];
+
+  } catch(e) {
+    console.error("❌ Ошибка сохранения в Firebase:", e);
+    localStorage.setItem("ft_front_db_v2", JSON.stringify(DB));
+    toast("Ошибка Firebase — данные сохранены локально");
+  }
+}
+
+function addNewColumn(){
+  const newDate = todayISO();
+  const newColIndex = document.querySelectorAll('.history-header > div').length; // Количество колонок
+  // Обновляем заголовок
+  const addColumn = $("addNewColumn");
+  addColumn.innerHTML = `<input id="date${newColIndex}" type="date" value="${newDate}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);">`;
+  addColumn.id = `col${newColIndex}Header`;
+  // Обновляем ряды
+  const rows = document.querySelectorAll(".history-row");
+  rows.forEach((row, index)=>{
+    const measure = measurementsList[index];
+    const newCell = document.createElement("div");
+    newCell.innerHTML = `<input id="input${measure.key}_${newColIndex}" type="number" step="0.1" placeholder="см" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--fg);"></div>`;
+    row.appendChild(newCell);
+  });
+  // Добавляем слушатель для новой колонки
+  // $(`col${newColIndex}Header`).addEventListener("click", ()=> saveColumn(newColIndex));
+  // Добавляем новую кнопку "Добавить" после новой колонки
+  const newAddColumn = document.createElement("div");
+  newAddColumn.id = "addNewColumn";
+  newAddColumn.textContent = "Добавить";
+  newAddColumn.style.cursor = "pointer";
+  newAddColumn.style.color = "var(--accent)";
+  newAddColumn.addEventListener("click", ()=> addNewColumn());
+  header.appendChild(newAddColumn);
+  // Перерисовываем таблицу для обновления grid
+  renderHistory();
+}
+
+async function saveMeasurements(){
+  const newDate=$("date5").value;
+  const newMeasurement={date:newDate};
+  let allFilled=true;
+  measurementsList.forEach(m=>{
+    const val=parseFloat($(`input${m.key}`).value);
+    if(isNaN(val)){ allFilled=false; } else { newMeasurement[m.key]=val; }
+  });
+  if(!allFilled){ toast("Заполните все поля"); return; }
+
+  // Добавляем новые данные в DB
+  DB.measurements.push(newMeasurement);
+
+  // Сохраняем ВСЕ данные в Firebase
+  console.log(`💾 Сохраняем замер ${newDate} в Firebase`);
+  await saveAllMeasurementsToFirebase();
+
+  // Обновляем локальные данные
+  loadedMeasurements.push(newMeasurement);
+  renderHistory();
+  toast("Замер добавлен");
+}
+
+function saveMeasurementsToFile(){
+  const data = {measurements: DB.measurements};
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "measurements.json";
+  a.click();
+  URL.revokeObjectURL(url);
+  toast("Файл measurements.json скачан — сохраните его в проект вручную");
+}
 /* Settings */
-$("userName").addEventListener("blur",(e)=>{ DB.user.name=e.target.value.trim()||"Антон"; saveDB(); syncUserUI(); toast("Имя сохранено"); });
-$("themeSel").addEventListener("change",(e)=>{ DB.user.theme=e.target.value; saveDB(); syncUserUI(); toast("Тема применена"); });
+async function saveUserSettings(){
+  await saveDB();
+  toast("Настройки сохранены");
+}
+
+$("userName").addEventListener("blur",(e)=>{ DB.user.name=e.target.value.trim()||"Антон"; saveUserSettings(); syncUserUI(); });
+$("themeSel").addEventListener("change",(e)=>{ DB.user.theme=e.target.value; saveUserSettings(); syncUserUI(); });
 $("btnExport").addEventListener("click", ()=>{ const blob=new Blob([JSON.stringify(DB,null,2)], {type:"application/json"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="fitness-data.json"; a.click(); URL.revokeObjectURL(url); });
 
 /* Overlays */
@@ -542,6 +1387,8 @@ document.querySelectorAll('[data-open]').forEach(btn=>{
     document.getElementById(id).classList.add("open");
     if(id==="ov-exercises") renderExercises();
     if(id==="ov-plan"){ setPrevWorkoutLabel(); setInitPlanHeader(); }
+    if(id==="ov-measurements") renderHistory();
+    if(id==="ov-nutrition") renderNutrition();
     if(id==="ov-history") renderHistory();
   });
 });
@@ -565,12 +1412,18 @@ $("btnAddWeight").addEventListener("click", openAddWeight);
 $("btnSave").addEventListener("click", saveWorkout);
 
 /* Init */
-(async function(){ 
-  loadDB(); 
+(async function(){
+  console.log("🚀 Инициализация приложения...");
+  // НЕ очищаем локальное хранилище при запуске, сохраняем настройки пользователя
+  await loadDB();
   await loadExercisesFromJSON(); // Ждем загрузки упражнений
-  seedIfEmpty(); 
-  saveDB(); // Сохраняем обновленные данные
-  syncUserUI(); 
+  seedIfEmpty();
+  console.log(`📊 После инициализации: ${DB.measurements.length} замеров в памяти`);
+  // Синхронизируем UI с данными пользователя, включая тему
+  syncUserUI();
+  // Инициализируем вкладки если они есть
+  if(document.querySelector('.tab')) initTabs();
+  console.log("✅ Приложение готово");
 })();
 </script>
 </body>
