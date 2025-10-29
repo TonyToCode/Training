@@ -2,8 +2,9 @@
 <html lang="ru" data-theme="dark">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Трекер тренировок — фронтенд v2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0EA5E9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B0C0F" media="(prefers-color-scheme: dark)">
   <!-- Firebase SDK v8 CDN (стабильная версия с глобальными переменными) -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-analytics.js"></script>
@@ -42,7 +43,7 @@
     --border: #E6E8EC;
     --card: #F8F9FB;
 
-    --accent: #0EA5E9;   /* основной акцент (голубой) */
+    --accent: #0EA5E9;
     --accent-ink: #06151C;
 
     --ok: #16A34A;
@@ -53,6 +54,11 @@
     --shadow-1: 0 1px 2px rgba(0,0,0,.06);
     --shadow-2: 0 8px 24px rgba(0,0,0,.12);
 
+    /* Safe area для мобильных */
+    --safe-b: env(safe-area-inset-bottom);
+    --safe-t: env(safe-area-inset-top);
+    --gap: 12px;
+
     /* Типографика */
     --font-sans: ui-sans-serif, system-ui, -apple-system, "Inter", "Geist", "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
     --lh: 1.45;
@@ -61,13 +67,13 @@
     --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px; --space-5: 20px;
     --space-6: 24px; --space-7: 32px; --space-8: 40px; --space-9: 48px;
 
-    --fs-xs: clamp(12px, 0.78vw, 13px);
-    --fs-sm: clamp(13px, 0.85vw, 14px);
-    --fs-md: clamp(14px, 0.92vw, 16px);
-    --fs-lg: clamp(18px, 1.2vw, 20px);
-    --fs-h3: clamp(20px, 1.6vw, 24px);
-    --fs-h2: clamp(22px, 2.0vw, 28px);
-    --fs-h1: clamp(26px, 3.2vw, 36px);
+    --fs-xs: 12px;
+    --fs-sm: 13px;
+    --fs-md: 14px;
+    --fs-lg: 15px;
+    --fs-h3: 16px;
+    --fs-h2: 18px;
+    --fs-h1: 20px;
   }
 
   :root[data-theme="dark"] {
@@ -82,9 +88,15 @@
 
     --shadow-1: 0 1px 2px rgba(0,0,0,.35);
     --shadow-2: 0 10px 28px rgba(0,0,0,.45);
+
+    /* Safe area для мобильных */
+    --safe-b: env(safe-area-inset-bottom);
+    --safe-t: env(safe-area-inset-top);
+    --gap: 12px;
   }
+
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;font-family:var(--font-sans);line-height:var(--lh);text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+  html,body{height:100%;margin:0;font-family:var(--font-sans);line-height:var(--lh);text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;font-size:16px}
   html{background:var(--bg);color:var(--fg)}
   body{background:var(--bg);color:var(--fg)}
   header{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--border);z-index:40}
@@ -95,34 +107,25 @@
   .text{font-size:var(--fs-md)}
   .text-muted{color:var(--muted)}
   .small{font-size:var(--fs-sm);color:var(--muted)}
-  .container{max-width:1040px;margin:0 auto;padding:0 var(--space-6)}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-1);padding:var(--space-6)}
+  .container{max-width:1040px;margin:0 auto;padding:0 16px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-1);padding:24px}
   .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--fg);font-size:var(--fs-md);transition:transform .02s ease,background .15s ease,border-color .15s ease}
   .btn:active{transform:translateY(1px)}
   .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .btn-primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;box-shadow:var(--shadow-2)}
+  .btn-success{background:var(--ok);color:var(--accent-ink);border-color:transparent}
+  .btn-warn{background:var(--warn);color:var(--accent-ink);border-color:transparent}
+  .btn-danger{background:var(--err);color:var(--accent-ink);border-color:transparent}
   .input,.select{width:100%;background:var(--bg);color:var(--fg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:var(--fs-md)}
   .input::placeholder{color:var(--muted)}
   .input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .nav-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
-  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:var(--space-6)}
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
   .col-3{grid-column:span 3}
   .col-4{grid-column:span 4}
   .col-6{grid-column:span 6}
   .col-12{grid-column:1/-1}
-  @media(max-width:1024px){
-    .col-3{grid-column:span 6}
-    .col-4{grid-column:span 6}
-  }
-  @media(max-width:640px){
-    .col-3{grid-column:1/-1}
-    .col-4{grid-column:1/-1}
-  }
-  .menu{display:flex;gap:8px;flex-wrap:wrap}
-  .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--fg);font-size:13px}
-  .muted{color:var(--muted)}
-  .tag{font-size:12px;color:var(--fg);background:var(--accent);border:1px solid var(--accent);padding:2px 6px;border-radius:6px;color:var(--accent-ink)}
   .list{display:flex;flex-direction:column;gap:8px}
   .item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--card);background:color-mix(in srgb, var(--card) 90%, #000 10%)}
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -131,21 +134,22 @@
   select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent)}
   .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.35);z-index:50}
   .overlay.open{display:flex}
-  .popup{width:min(1020px,100% - 20px);max-height:86vh;overflow:auto}
+  .popup{width:min(100% - 24px,1000px);max-height:86vh;overflow-y:auto;overflow-x:hidden}
   .popheader{position:sticky;top:0;background:var(--card);padding-bottom:8px;margin:-12px -12px 12px -12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;border-radius:var(--radius) var(--radius) 0 0}
   .x{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);background:transparent;border-radius:10px;padding:6px 10px;cursor:pointer}
   .drawer{position:fixed;inset:0;display:none;justify-content:flex-end;align-items:stretch;background:rgba(0,0,0,.35);z-index:60}
   .drawer.open{display:flex}
-  .panel{width:min(520px,100%);background:var(--card);border-left:1px solid var(--border);padding:12px;overflow:auto}
-  .sticky{position:sticky;bottom:0;background:color-mix(in srgb, var(--card) 80%, transparent);backdrop-filter:blur(4px);margin:-12px;border-radius:0 0 var(--radius) var(--radius);padding:10px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+  .panel{width:min(100%,480px);background:var(--card);border-left:1px solid var(--border);padding:12px;overflow:auto;-webkit-overflow-scrolling:touch}
+  .sticky{position:sticky;bottom:0;background:color-mix(in srgb, var(--card) 80%, transparent);backdrop-filter:blur(4px);margin:-12px;border-radius:0 0 var(--radius) var(--radius);padding:10px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;padding-bottom:calc(10px + var(--safe-b))}
   .empty{border:1px dashed var(--border);border-radius:var(--radius);padding:16px;text-align:center;color:var(--muted)}
   .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:var(--card);color:var(--fg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;opacity:0;transition:opacity .2s;z-index:80}
   .toast.show{opacity:1}
-  .history-table{display:grid;grid-template-columns:200px repeat(4, 150px);gap:8px;margin-bottom:16px;align-items:center}
+  .history-table-wrapper{overflow-x:auto;margin-bottom:16px;-webkit-overflow-scrolling:touch}
+  .history-table{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:8px;margin-bottom:16px;align-items:center;min-width:800px}
   .history-header{font-weight:600;padding:8px;border-bottom:1px solid var(--border);display:contents}
   .history-header > div{text-align:center}
   .history-row{display:contents}
-  .history-row > div{padding:6px;text-align:center;border:1px solid var(--border);background:var(--card)}
+  .history-row > div{text-align:center;padding:8px}
   #addColumn{cursor:pointer;color:var(--accent)}
   .nav{display:flex;gap:var(--space-2);border-bottom:1px solid var(--border);margin-bottom:var(--space-6)}
   .nav-item{position:relative;padding:var(--space-3) var(--space-4);cursor:pointer;color:var(--muted);transition:color .15s ease}
@@ -153,18 +157,54 @@
   .nav-item.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--accent)}
   .tab-content{display:none}
   .tab-content.active{display:block}
-  .section-title{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-6)}
-  .section-title::before{content:'';flex:1;height:1px;background:var(--border)}
-  .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
-  .btn-success{background:var(--ok);color:var(--accent-ink);border-color:transparent}
-  .btn-warn{background:var(--warn);color:var(--accent-ink);border-color:transparent}
-  .btn-danger{background:var(--err);color:var(--accent-ink);border-color:transparent}
-  .form-group{margin-bottom:var(--space-4)}
-  .form-label{font-size:var(--fs-sm);font-weight:600;color:var(--fg);margin-bottom:var(--space-2);display:block}
-  .form-error{color:var(--err);font-size:var(--fs-sm);margin-top:var(--space-1)}
-  .form-help{color:var(--muted);font-size:var(--fs-sm);margin-top:var(--space-1)}
+
+  /* Табы */
+  .tabs{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+  .tab{padding:12px 16px;border:1px solid #7dd3fc;border-radius:8px;background:#e0f2fe;color:#0369a1;font-size:var(--fs-md);cursor:pointer;transition:all 0.15s ease;text-align:left;width:100%}
+  .tab:hover{background:#b3e5fc;color:#01579b}
+  .tab.active{background:#0284c7;color:#f0f9ff;border-color:#0284c7;font-weight:600}
+  /* Мобильные медиа-запросы */
+  @media(max-width:1024px){
+    .col-3{grid-column:span 4}
+    .col-6{grid-column:span 8}
+  }
+  @media(max-width:640px){
+    .col-3{grid-column:1/-1}
+    .col-6{grid-column:1/-1}
+    .container{padding:0 16px}
+    .wrap{padding:16px}
+    .card{padding:16px}
+    .tabs{flex-direction:column;gap:6px}
+    .tab{font-size:13px;padding:10px 14px}
+  }
+  @media(max-width:480px){
+    .container{padding:0 12px}
+    .wrap{padding:12px}
+    .card{padding:12px}
+    header{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--border);z-index:40;padding-top:var(--safe-t)}
+    .grid{gap:12px}
+    .popup{width:calc(100% - 16px);max-height:calc(100vh - var(--safe-t) - var(--safe-b) - 48px);overflow-y:auto;overflow-x:hidden}
+    .panel{width:100%;padding-bottom:calc(12px + var(--safe-b))}
+    .sticky{padding-bottom:calc(10px + var(--safe-b))}
+    .toast{bottom:calc(16px + var(--safe-b))}
+    .menu{flex-wrap:wrap;gap:4px}
+    .menu button{font-size:13px;padding:8px 10px}
+    .menu .pill{font-size:11px;padding:4px 8px}
+    .history-table{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:4px;font-size:12px;min-width:600px}
+    .history-table .history-header > div,.history-table .history-row > div{padding:4px}
+    .history-table-wrapper{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .row{gap:8px}
+    .item{padding:8px;gap:8px}
+    .list{gap:6px}
+  }
+  @media(max-width:480px){
+    .tabs{flex-direction:column;gap:6px}
+    .tab{font-size:13px;padding:10px 14px}
+    /* Touch-friendly размеры для мобильных */
+    .btn,input[type="button"],input[type="submit"],button,select{min-height:44px;min-width:44px}
+    .btn{font-size:14px;padding:10px 12px}
+  }
 </style>
-</head>
 <body>
 <header class="header">
   <div class="wrap">
@@ -237,12 +277,12 @@
 
         <div id="tab-stats" class="tab-content">
           <p class="text-muted">Статистика тренировок и достижений.</p>
-          <div class="row" style="margin-top: var(--space-4);">
-            <div class="card" style="flex: 1;">
+          <div class="row" style="margin-top: 12px; gap: 12px;">
+            <div style="text-align: center;">
               <div class="text-muted small">Всего тренировок</div>
               <div style="font-size: var(--fs-h2); font-weight: 700;">24</div>
             </div>
-            <div class="card" style="flex: 1;">
+            <div style="text-align: center;">
               <div class="text-muted small">Рекорды</div>
               <div style="font-size: var(--fs-h2); font-weight: 700; color: var(--ok);">8</div>
             </div>
@@ -251,13 +291,13 @@
 
         <div id="tab-history" class="tab-content">
           <p class="text-muted">История ваших последних активностей.</p>
-          <div class="list">
+          <div class="list" style="margin-top: 12px;">
             <div class="item">
-              <div><b>Присед</b><div class="small">70 кг × 4 подхода</div></div>
+              <div><b>Присед</b><div class="small text-muted">70 кг × 4 подхода</div></div>
               <span class="tag">Ноги</span>
             </div>
             <div class="item">
-              <div><b>Жим лежа</b><div class="small">60 кг × 4 подхода</div></div>
+              <div><b>Жим лежа</b><div class="small text-muted">60 кг × 4 подхода</div></div>
               <span class="tag">Грудь</span>
             </div>
           </div>
@@ -935,12 +975,27 @@ $("awMinus").addEventListener("click",()=>{ AW.delta=Math.max(0,AW.delta-2.5); u
 $("awApply").addEventListener("click",()=>{ if(!AW.exId){toast("Выберите упражнение"); return;} const ex=DB.exercises.find(e=> e.id===AW.exId); const old=(typeof ex.pr==="number")?ex.pr:0; if(AW.delta===0){toast("Нечего добавлять"); return;} ex.pr=old+AW.delta; ex.lastDate=todayISO(); saveDB(); toast("PR обновлён"); document.getElementById("ov-add").classList.remove("open"); });
 
 /* Exercises */
-function renderExercises(){ const g=$("exGroup").value; const q=$("exSearch").value.trim().toLowerCase(); const list=$("exList"); list.innerHTML=""; DB.exercises.filter(e=> e.group===g).filter(e=> !q || e.name.toLowerCase().includes(q)).forEach(ex=>{ const last=ex.lastDate?fmt(ex.lastDate):"—"; const pr=ex.pr==null?"—":(ex.pr+" кг"); const row=document.createElement("div"); row.className="item"; row.innerHTML=`<div><b>${ex.name}</b><div class="muted">PR: ${pr} · Последний раз: ${last} · Подходы: 4</div></div><span class="tag">${ex.group}</span>`; list.appendChild(row); }); }
+function renderExercises(){ 
+  const g=$("exGroup").value; 
+  const q=$("exSearch").value.trim().toLowerCase(); 
+  const list=$("exList"); 
+  list.innerHTML=""; 
+  DB.exercises.filter(e=> e.group===g).filter(e=> !q || e.name.toLowerCase().includes(q)).forEach(ex=>{ 
+    const last=ex.lastDate?fmt(ex.lastDate):"—"; 
+    const pr=ex.pr==null?"—":(ex.pr+" кг"); 
+    const row=document.createElement("div"); 
+    row.className="item"; 
+    row.innerHTML=`<div><b>${ex.name}</b><div class="muted">PR: ${pr} · Последний раз: ${last} · Подходы: 4</div></div><span class="tag">${ex.group}</span>`; 
+    list.appendChild(row); 
+  }); 
+}
 $("exGroup").addEventListener("change", renderExercises);
 $("exSearch").addEventListener("input", renderExercises);
 
 function renderHistory(){
   const area=$("measurementsArea"); area.innerHTML="";
+  // Создаем wrapper с горизонтальной прокруткой
+  const wrapper=document.createElement("div"); wrapper.className="history-table-wrapper";
   // Создаем таблицу с 5 колонками
   const table=document.createElement("div"); table.className="history-table";
   const header=document.createElement("div"); header.className="history-header";
@@ -965,7 +1020,8 @@ function renderHistory(){
     `;
     table.appendChild(row);
   });
-  area.appendChild(table);
+  wrapper.appendChild(table);
+  area.appendChild(wrapper);
 
   // Заполняем таблицу данными из DB.measurements (фиксированная структура)
   console.log(`📊 Заполняем таблицу ${DB.measurements.length} колонками из Firebase`);
@@ -1058,6 +1114,8 @@ function renderHistory(){
 
 function renderNutrition(){
   const area=$("nutritionArea"); area.innerHTML="";
+  // Создаем wrapper с горизонтальной прокруткой
+  const wrapper=document.createElement("div"); wrapper.className="history-table-wrapper";
   // Создаем таблицу с 5 колонками
   const table=document.createElement("div"); table.className="history-table";
   const header=document.createElement("div"); header.className="history-header";
@@ -1082,7 +1140,8 @@ function renderNutrition(){
     `;
     table.appendChild(row);
   });
-  area.appendChild(table);
+  wrapper.appendChild(table);
+  area.appendChild(wrapper);
 
   // Заполняем таблицу данными из DB.nutrition (фиксированная структура)
   console.log(`📊 Заполняем таблицу питания ${DB.nutrition.length} колонками из Firebase`);
@@ -1273,9 +1332,6 @@ function addNewColumn(){
   newAddColumn.style.color = "var(--accent)";
   newAddColumn.addEventListener("click", ()=> addNewColumn());
   header.appendChild(newAddColumn);
-  // Обновляем CSS для таблицы
-  const table = document.querySelector(".history-table");
-  table.style.gridTemplateColumns = `200px repeat(${newColIndex + 1}, 150px)`;
   // Перерисовываем таблицу для обновления grid
   renderHistory();
 }
